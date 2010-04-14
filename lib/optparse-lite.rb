@@ -28,9 +28,18 @@ private
       self.opts  ||= []
       self.usage ||= []
     end
+    def args_usage_from_arity
+      arity = unbound_method.arity
+      arity -= (arity > 0 ? 1 : -1) if opts.any?
+      args = (0..arity.abs-1).map{|i| "<arg#{i+1}>"}
+      if arity < 0
+        args.last.replace("[#{args.last}]") # too bad we can't etc
+      end
+      args.any? ? (args * ' ') : nil
+    end
     def desc_oneline
       desc.any? ? desc.first : usage.any? ? usage_oneline_short :
-      opts.any? ? opts.first.desc_oneline : usage_from_arity
+      opts.any? ? opts.first.desc_oneline : usage_from_arity_short
     end
     def pretty
       method_name.gsub(/_/,'-')
@@ -40,16 +49,10 @@ private
     def unbound_method
       spec.unbound_method method_name
     end
-    def usage_from_arity
-      arity = unbound_method.arity
-      arity -= (arity > 0 ? 1 : -1) if opts.any?
-      args = (0..arity.abs-1).map{|i| "<arg#{i+1}>"}
-      if arity < 0
-        args.last.replace("[#{args.last}]") # too bad we can't etc
-      end
-      args = args.any? ? ( args * ' ') : nil
+    def usage_from_arity_short
+      args = args_usage_from_arity
       optz = opts.any? ? "<opts>" : nil
-      "#{hdr 'Usage:'} " << [pretty, optz, args].compact.join(' ')
+      'usage: ' << [pretty, optz, args].compact.join(' ')
     end
     def usage_oneline_short
       "usage: #{spec.invocation_name} #{pretty_full} " << (usage * ' ')
@@ -80,6 +83,7 @@ private
       ['-h','--help','-?'].include? argv[0]
     end
     def hdr(str); "\e[32;m#{str}\e[0m" end
+    alias_method :code, :hdr
   end
   class Help
     include Lingual, HelpHelper
@@ -90,6 +94,7 @@ private
       @ui = ui
     end
     def requested argv
+      return command_help_full(argv[1], argv[2..-2]) if argv.size > 1
       app_usage
       app_description_full
       list_base_commands
@@ -120,8 +125,51 @@ private
         )
       end
     end
+    def command_help_full cmd, rest
+      all = @spec.find_all cmd
+      case all.size
+      when 0
+        @ui.puts "i don't know how to #{code cmd}."
+        invite_to_more_help
+      when 1
+        command_help_full_actual all.first, rest
+      else
+        @ui.puts "did you mean " <<
+          oxford_comma(all.map{|x| code(x.pretty)}, ' or ') << '?'
+        invite_to_more_help
+      end
+    end
+    def command_help_full_actual cmd, rest
+      command_usage cmd
+      if cmd.desc.any?
+        @ui.print hdr('Description:')
+        lines = @cmd.desc.get_lines
+        if lines.size == 1
+          @ui.puts "  #{lines.first}"
+        else
+          @ui.puts "\n" << lines.map{|x| "#{@margin_a}#{x}"}
+        end
+      end
+      list_options(cmd) if cmd.opts.any?
+    end
+    def command_usage cmd
+      @ui.print hdr("Usage: ") <<
+        " #{@spec.invocation_name} #{cmd.pretty_full}"
+      if cmd.usage.any?
+        @ui.puts opts_interpolate(cmd, cmd.usage * ' ')
+      else
+        @ui.puts(
+          [ cmd.opts.any? ? opts_string(cmd) : nil,
+            cmd.args_usage_from_arity
+          ].compact.join(' ')
+        )
+      end
+    end
     def invite_to_more_command_help
       @ui.puts "type -h after a command or subcommand name for more help"
+    end
+    def invite_to_more_help
+      @ui.puts "try #{code(@spec.invocation_name + ' -h')} for help."
     end
     def list_commands cmds
       width = cmds.map{|c| c.pretty.length}.max +
@@ -132,6 +180,24 @@ private
         )
       end
     end
+    def list_options cmd
+      matrix = []
+      cmd.opts.each do |parser|
+        parser.doc_matrix matrix
+      end
+      unless matrix.first[2]
+        @ui.puts hdr('Options:')
+      end
+      width = matrix.map{|x| x[0] ? x[0].length : nil }.compact.max
+      matrix.each do |row|
+        @ui.puts hdr(row[2]) if row[2]
+        if @row[0] || @row[1]
+          @ui.puts sprintf(
+            "#{@margin_a}%#{width}s#{@margin_b}%s", [@row[0], @ros[1]]
+          )
+        end
+      end
+    end
     def list_base_commands
       cmds = @spec.base_commands
       return if cmds.empty?
@@ -139,6 +205,12 @@ private
       @ui.puts "#{hdr 'Commands:'}"
       list_commands cmds
       invite_to_more_command_help
+    end
+    def opts_interpolate cmd, string
+      string.gsub('#{opts}'){|x| opts_string(cmd)}
+    end
+    def opts_string cmd
+      cmd.opts.map{|o| o.sytax_tokens}.flatten.join(' ')
     end
   end
   module Lingual
@@ -168,7 +240,7 @@ private
     alias_method :usage, :o
     def run argv=ARGV.dup
       unless OptparseLite.run_enabled?
-        $stderr.puts('run disabled. (probably for gentesting)')
+        @ui.err.puts('run disabled. (probably for gentesting)')
         return
       end
       @instance ||= begin
@@ -201,6 +273,7 @@ private
     alias_method :to_s, :to_str
   end
   class Spec
+    include Lingual
     def initialize mod
       @app_description = Description.new
       @base_commands = nil
@@ -224,6 +297,20 @@ private
     end
     def desc mixed
       @app_description.push mixed
+    end
+    def find_all name
+      meth = methodize(name)
+      re = /^#{Regexp.escape(name)}/
+      (@order & (
+        @mod.public_instance_methods(false) |
+        @commands.map{|x| x.method_name }
+      )).grep(re).map do |n|
+        if n == meth
+          return [get_command(n)]
+        else
+          get_command(n)
+        end
+      end
     end
     attr_writer :invocation_name
     def invocation_name
@@ -262,14 +349,18 @@ private
   class Ui
     def initialize
       @out = $stdout
+      @err = $stderr
     end
+    attr_accessor :err
+
+    %w(print puts).each do |meth|
+      define_method(meth){|*a| @out.send(meth,*a) }
+    end
+
     def push io=Sio.new
       @stack ||= []
       @stack.push @out
       @out = io
-    end
-    def puts *a
-      @out.puts(*a)
     end
     def pop
       ret = @out

@@ -1,8 +1,7 @@
+require 'ruby-debug'
 require File.dirname(__FILE__)+'/optparse-lite-test-setup.rb'
 
-
 module OptparseLite::Test
-
 
   class Empty
     include OptparseLite
@@ -17,6 +16,17 @@ module OptparseLite::Test
       act = _run{ run [] }.strip
       assert_no_diff(exp, act)
     end
+
+    it 'no run' do
+      OptparseLite.suppress_run!
+      hold = Empty.ui.err
+      Empty.ui.err = OptparseLite::Sio.new
+      Empty.run
+      have = Empty.ui.err
+      Empty.ui.err = hold
+      OptparseLite.enable_run!
+      assert_equal "run disabled. (probably for gentesting)\n", have.to_s
+    end
   end
 
 
@@ -27,29 +37,48 @@ module OptparseLite::Test
   OneMeth.spec.invocation_name = "one-meth-app.rb"
 
   describe OneMeth do
-    it 'one-meth-app.rb no args must work' do
-      exp = <<-HERE.noindent
-        \e[32;mUsage:\e[0m one-meth-app.rb {bar} [<opts>] [<args>]
-
-        \e[32;mCommands:\e[0m
-          bar          \e[32;mUsage:\e[0m bar
-        type -h after a command or subcommand name for more help
-      HERE
-      act = _run{ run [] }.strip
-      assert_no_diff(exp, act)
-    end
-  end
-
-  describe OneMeth do
     it 'one-meth-app.rb ask for help must work' do
       exp = <<-HERE.noindent
         \e[32;mUsage:\e[0m one-meth-app.rb <command> [<opts>] [<args>]
 
         \e[32;mCommands:\e[0m
-          bar          \e[32;mUsage:\e[0m bar
+          bar          usage: bar
         type -h after a command or subcommand name for more help
       HERE
       act = _run{ run ["-h"] }.strip
+      assert_no_diff(exp, act)
+    end
+    it 'one-meth-app.rb no args must work' do
+      exp = <<-HERE.noindent
+        \e[32;mUsage:\e[0m one-meth-app.rb {bar} [<opts>] [<args>]
+
+        \e[32;mCommands:\e[0m
+          bar          usage: bar
+        type -h after a command or subcommand name for more help
+      HERE
+      act = _run{ run [] }.strip
+      assert_no_diff(exp, act)
+    end
+    it 'one-meth-app.rb ask for help bad command must work' do
+      exp = <<-HERE.noindent
+        i don't know how to \e[32;mska\e[0m.
+        try \e[32;mone-meth-app.rb -h\e[0m for help.
+      HERE
+      act = _run{ run ["-h", "ska"] }.strip
+      assert_no_diff(exp, act)
+    end
+    it 'one-meth-app.rb ask for help partial match must work' do
+      exp = <<-HERE.noindent
+        \e[32;mUsage: \e[0m one-meth-app.rb bar
+      HERE
+      act = _run{ run ["-h", "b"] }.strip
+      assert_no_diff(exp, act)
+    end
+    it 'one-meth-app.rb ask for help full match must work' do
+      exp = <<-HERE.noindent
+        \e[32;mUsage: \e[0m one-meth-app.rb bar
+      HERE
+      act = _run{ run ["-h", "bar"] }.strip
       assert_no_diff(exp, act)
     end
   end
@@ -80,7 +109,7 @@ module OptparseLite::Test
         \e[32;mUsage:\e[0m one-meth-with-neg-arity-app.rb {bar} [<opts>] [<args>]
 
         \e[32;mCommands:\e[0m
-          bar          \e[32;mUsage:\e[0m bar [<arg1>]
+          bar          usage: bar [<arg1>]
         type -h after a command or subcommand name for more help
       HERE
       act = _run{ run [] }.strip
@@ -101,7 +130,7 @@ module OptparseLite::Test
         \e[32;mUsage:\e[0m one-meth-with-pos-arity-app.rb {bar} [<opts>] [<args>]
 
         \e[32;mCommands:\e[0m
-          bar          \e[32;mUsage:\e[0m bar <arg1>
+          bar          usage: bar <arg1>
         type -h after a command or subcommand name for more help
       HERE
       act = _run{ run [] }.strip
@@ -157,3 +186,14 @@ module OptparseLite::Test
   end
 
 end
+
+# describe Hipe::Gentest do
+#   exp = <<-HERE.noindent
+#     class Empty
+#       include OptparseLite
+#     end
+#     Empty.spec.invocation_name = "empty-app.rb"
+#   HERE
+#   file = File.expand_path('../../emp', __FILE__)
+#   assert(false, File.exist?(file))
+# end
