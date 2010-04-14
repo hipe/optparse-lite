@@ -29,12 +29,13 @@ private
       self.usage ||= []
     end
     def desc_oneline
-      desc.any? ? desc.first : usage.any? ? usage.first :
+      desc.any? ? desc.first : usage.any? ? usage_oneline_short :
       opts.any? ? opts.first.desc_oneline : usage_from_arity
     end
     def pretty
       method_name.gsub(/_/,'-')
     end
+    alias_method :pretty_full, :pretty
   private
     def unbound_method
       spec.unbound_method method_name
@@ -49,6 +50,9 @@ private
       args = args.any? ? ( args * ' ') : nil
       optz = opts.any? ? "<opts>" : nil
       "#{hdr 'Usage:'} " << [pretty, optz, args].compact.join(' ')
+    end
+    def usage_oneline_short
+      "usage: #{spec.invocation_name} #{pretty_full} " << (usage * ' ')
     end
   end
   class Description < Array
@@ -98,7 +102,7 @@ private
   private
     def app_description_full
       lines = @spec.app_description.get_lines
-      @ui.puts lines
+      @ui.puts lines.map{|line| "#{@margin_a}#{line}"}
     end
     def app_usage
       @ui.puts "#{hdr 'Usage:'} #{@spec.invocation_name} "<<
@@ -157,9 +161,11 @@ private
       @ui = Ui.new
     end
     attr_reader :ui, :spec
+    alias_method :app, :spec
     def o usage
       @spec.usage usage
     end
+    alias_method :usage, :o
     def run argv=ARGV.dup
       unless OptparseLite.run_enabled?
         $stderr.puts('run disabled. (probably for gentesting)')
@@ -173,8 +179,9 @@ private
       @instance.run argv
     end
     def x desc
-      @spec.desc desc
+      @spec.cmd_desc desc
     end
+    alias_method :desc, :x
     def method_added method_sym
       @spec.method_added_notify method_sym
     end
@@ -211,9 +218,12 @@ private
         end
       end
     end
-    def desc desc
+    def cmd_desc desc
       @desc ||= []
       @desc.push desc
+    end
+    def desc mixed
+      @app_description.push mixed
     end
     attr_writer :invocation_name
     def invocation_name

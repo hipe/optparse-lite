@@ -109,4 +109,51 @@ module OptparseLite::Test
     end
   end
 
+
+  class OneMethDesc
+    include OptparseLite
+
+    app.desc "when u wanna have a good time"
+
+    desc "this is for barring"
+    def bar; end
+  end
+  OneMethDesc.spec.invocation_name = "one-meth-desc-app.rb"
+
+  describe OneMethDesc do
+    it 'one-meth-desc-app.rb must work' do
+      exp = <<-HERE.noindent
+        \e[32;mUsage:\e[0m one-meth-desc-app.rb {bar} [<opts>] [<args>]
+          when u wanna have a good time
+
+        \e[32;mCommands:\e[0m
+          bar          this is for barring
+        type -h after a command or subcommand name for more help
+      HERE
+      act = _run{ run [] }.strip
+      assert_no_diff(exp, act)
+    end
+  end
+
+  class OneMethUsage
+    include OptparseLite
+    usage "<paint> <ball>"
+    def bar a, b; end
+  end
+  OneMethUsage.spec.invocation_name = "one-meth-usage-app.rb"
+
+  describe OneMethUsage do
+    it 'one-meth-usage-app.rb must work' do
+      exp = <<-HERE.noindent
+        \e[32;mUsage:\e[0m one-meth-usage-app.rb {bar} [<opts>] [<args>]
+
+        \e[32;mCommands:\e[0m
+          bar          usage: one-meth-usage-app.rb bar <paint> <ball>
+        type -h after a command or subcommand name for more help
+      HERE
+      act = _run{ run [] }.strip
+      assert_no_diff(exp, act)
+    end
+  end
+
 end
