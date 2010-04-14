@@ -8,7 +8,7 @@ module OptparseLite
         mod.init_service_class
         mod.send(:include, ServiceObject)
       else
-        puts "not implemented"
+        fail "module controller singletons not yet implemented"
       end
     end
     def suppress_run!; @run_enabled = false end
@@ -46,7 +46,7 @@ private
       if arity < 0
         args.last.replace("[#{args.last}]") # too bad we can't etc
       end
-      args = args.any? ? (' ' + args * ' ') : nil
+      args = args.any? ? ( args * ' ') : nil
       optz = opts.any? ? "<opts>" : nil
       "#{hdr 'Usage:'} " << [pretty, optz, args].compact.join(' ')
     end
@@ -86,15 +86,12 @@ private
       @ui = ui
     end
     def requested argv
-
-    end
-    def no_args
-      app_usage_expanded
+      app_usage
       app_description_full
       list_base_commands
     end
-    def general
-      app_usage
+    def no_args
+      app_usage_expanded
       app_description_full
       list_base_commands
     end
