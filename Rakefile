@@ -1,5 +1,4 @@
 # require 'rubygems'
-require 'ruby-debug'
 require 'rake/testtask.rb'
 require 'rake/gempackagetask.rb'
 require File.expand_path('../lib/optparse-lite.rb', __FILE__)

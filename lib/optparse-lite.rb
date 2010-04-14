@@ -1,4 +1,3 @@
-require 'ruby-debug'
 module OptparseLite
   @run_enabled = true
   class << self
@@ -22,6 +21,7 @@ private
   module HelpHelper
   end
   class Command < Struct.new(:spec, :method_name, :desc, :opts, :usage)
+    include HelpHelper
     def initialize *a
       super(*a)
       self.desc  ||= []
@@ -75,9 +75,10 @@ private
     def help_requested?(argv)
       ['-h','--help','-?'].include? argv[0]
     end
+    def hdr(str); "\e[32;m#{str}\e[0m" end
   end
   class Help
-    include Lingual
+    include Lingual, HelpHelper
     def initialize spec, ui
       @margin_a = '  '
       @margin_b = '    '
@@ -118,7 +119,6 @@ private
         )
       end
     end
-    def hdr(str); "\e[32;m#{str}\e[0m" end
     def invite_to_more_command_help
       @ui.puts "type -h after a command or subcommand name for more help"
     end

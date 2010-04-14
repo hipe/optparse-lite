@@ -155,7 +155,7 @@ private
   def go_exp act
     @ui.puts('exp = <<-HERE.noindent')
     @ui.indent!
-    @ui.puts act.to_s.inspect.gsub(/\\n/,"\n  ").gsub(/(\A"| *"\Z)/,'')
+    @ui.puts act.to_s.inspect.gsub('\n',"\n").gsub(/(\A"| *"\Z)/,'')
     @ui.dedent!
     @ui.puts 'HERE'
   end
