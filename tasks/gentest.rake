@@ -22,7 +22,7 @@ module Hipe::GenTest
   end
 
   def task_ungentest argv
-    fail('no') unless ARGV.shift == 'ungentest'
+    fail('no') unless %w(ungentest ungen).include?(ARGV.shift)
     use_argv = argv.dup
     argv.clear # don't let rake see (?)
     argv = use_argv
@@ -44,10 +44,10 @@ module Hipe::GenTest
     unless arg
       puts <<-HERE.gsub(/^        /,'')
 
-        #{hdr 'Usage:'} #{cmd 'rake ungentest'} -- some-app-name.rb
-               #{cmd 'rake ungentest'} -- -list
+        #{hdr 'Usage:'} #{cmd 'rake ungen'} -- some-app-name.rb
+               #{cmd 'rake ungen'} -- -list
 
-        #{hdr 'Description:'} create a file with that name in the current
+        #{hdr 'Description:'} Ungentest. create a file with that name in the current
           directory that has the code chunk found in the test file (for now,
           "test/test.rb")
 
@@ -72,4 +72,4 @@ desc "gentest -- try it and see!"
 task(:gentest){ Hipe::GenTest::task_gentest(ARGV) }
 
 desc "ungentest -- try it and see!"
-task(:ungentest){ Hipe::GenTest::task_ungentest(ARGV) }
+task(:ungen){ Hipe::GenTest::task_ungentest(ARGV) }
