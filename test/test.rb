@@ -38,7 +38,7 @@ module OptparseLite::Test
   describe OneMeth do
     it 'one-meth-app.rb ask for help must work' do
       exp = <<-HERE.noindent
-        \e[32;mUsage:\e[0m one-meth-app.rb <command> [<opts>] [<args>]
+        \e[32;mUsage:\e[0m one-meth-app.rb (bar) [<opts>] [<args>]
 
         \e[32;mCommands:\e[0m
           bar          usage: bar
@@ -195,28 +195,130 @@ module OptparseLite::Test
   class ThreeMeth
     include OptparseLite
     def foo; end
-    def bar; end
+    def bar(arg1, arg2); end
+    desc "faz line one"
+    desc "faz line two"
     def faz; end
   end
   ThreeMeth.spec.invocation_name = "three-meth-app.rb"
   ThreeMeth.spec.invocation_name = "three-meth-app.rb"
 
   describe ThreeMeth do
+
     it 'three-meth-app.rb no args must work' do
       exp = <<-HERE.noindent
         \e[32;mUsage:\e[0m three-meth-app.rb (foo|bar|faz) [<opts>] [<args>]
 
         \e[32;mCommands:\e[0m
           foo          usage: foo
-          bar          usage: bar
-          faz          usage: faz
+          bar          usage: bar <arg1> <arg2>
+          faz          faz line one
         type -h after a command or subcommand name for more help
       HERE
       act = _run{ run [] }.strip
       assert_no_diff(exp, act)
     end
+
+    it 'three-meth-app.rb help requested command not found must work' do
+      exp = <<-HERE.noindent
+        i don't know how to \e[32;mska\e[0m.
+        try \e[32;mthree-meth-app.rb -h\e[0m for help.
+      HERE
+      act = _run{ run ["-h", "ska"] }.strip
+      assert_no_diff(exp, act)
+    end
+
+    it 'three-meth-app.rb help requested partial match must work' do
+      exp = <<-HERE.noindent
+        did you mean \e[32;mfoo\e[0m or \e[32;mfaz\e[0m?
+        try \e[32;mthree-meth-app.rb -h\e[0m for help.
+      HERE
+      act = _run{ run ["-h", "f"] }.strip
+      assert_no_diff(exp, act)
+    end
+
+    it 'three-meth-app.rb help requestsed on command with desc must work' do
+      exp = <<-HERE.noindent
+        \e[32;mUsage: \e[0m three-meth-app.rb faz
+        \e[32;mDescription:\e[0m
+          faz line one
+          faz line two
+      HERE
+      act = _run{ run ["-h", "fa"] }.strip
+      assert_no_diff(exp, act)
+    end
   end
 
+  describe OptparseLite::OptsLike do
+    it "ops must be OptsLike" do
+      e = assert_raises(RuntimeError) do
+        class BadOpts
+          include OptparseLite
+          opts nil
+          def foo; end
+        end
+      end
+      assert_equal(e.message, 'opts must be OptsLike')
+    end
+  end
+
+
+  OptsStub = Object.new
+  class << OptsStub
+    include OptparseLite::OptsLike
+    def first_line
+      "fake first line"
+    end
+    def get_lines
+      ["fake multiline first line",
+       "fake mulitilne second line"
+      ]
+    end
+    def syntax_tokens
+      ['[--fake]', '[-b=<foo>]']
+    end
+    def doc_matrix arr
+      arr.concat [
+        [nil, nil, 'Awesome Opts:'],
+        ['-h,--hey','awesome desc'],
+        ['-H,--HO=<ho>', 'awesome desc2']
+      ]
+    end
+  end
+
+  class CmdWithOpts
+    include OptparseLite
+    opts OptsStub
+    def foo; end
+  end
+  CmdWithOpts.spec.invocation_name = "cmd-with-opts-app.rb"
+
+  describe CmdWithOpts do
+    it 'cmd-with-opts-app.rb must work with stub' do
+      exp = <<-HERE.noindent
+        \e[32;mUsage:\e[0m cmd-with-opts-app.rb (foo) [<opts>] [<args>]
+
+        \e[32;mCommands:\e[0m
+          foo          fake first line
+        type -h after a command or subcommand name for more help
+      HERE
+      act = _run{ run [] }.strip
+      assert_no_diff(exp, act)
+    end
+    it 'cmd-with-opts-app.rb multiline description stub' do
+      exp = <<-HERE.noindent
+        \e[32;mUsage: \e[0m cmd-with-opts-app.rb foo [--fake] [-b=<foo>] <arg1>
+        \e[32;mDescription:\e[0m
+          fake multiline first line
+          fake mulitilne second line
+        \e[32;mAwesome Opts:\e[0m
+              -h,--hey    awesome desc
+          -H,--HO=<ho>    awesome desc2
+      HERE
+      act = _run{ run ["-h", "foo"] }.strip
+      assert_no_diff(exp, act)
+    end
+  end
 end
 
 # describe Hipe::Gentest do

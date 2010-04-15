@@ -24,8 +24,8 @@ private
     include HelpHelper
     def initialize *a
       super(*a)
+      @opt_indexes = a[3] || []
       self.desc  ||= []
-      self.opts  ||= []
       self.usage ||= []
       Descriptive[self.desc]
     end
@@ -39,8 +39,11 @@ private
       args.any? ? (args * ' ') : nil
     end
     def desc_oneline
-      desc.any? ? desc.first : usage.any? ? usage_oneline_short :
+      desc.any? ? desc.first_line : usage.any? ? usage_oneline_short :
       opts.any? ? opts.first.desc_oneline : usage_from_arity_short
+    end
+    def opts
+      @opt_indexes.map{|x| desc[x]}
     end
     def pretty
       method_name.gsub(/_/,'-')
@@ -62,7 +65,12 @@ private
   module Descriptive
     class << self; def [](m); m.extend(self) end end
     def get_lines
-      self
+      map{ |line|
+        line.kind_of?(String) ? line : line.get_lines
+      }.flatten
+    end
+    def first_line
+      first.kind_of?(String) ? first : first.first_line
     end
   end
   class Description < Array
@@ -114,10 +122,10 @@ private
       lines = @spec.app_description.get_lines
       @ui.puts lines.map{|line| "#{@margin_a}#{line}"}
     end
-    def app_usage
-      @ui.puts "#{hdr 'Usage:'} #{@spec.invocation_name} "<<
-        "<command> [<opts>] [<args>]"
-    end
+    # def app_usage
+    #   @ui.puts "#{hdr 'Usage:'} #{@spec.invocation_name} "<<
+    #     "<command> [<opts>] [<args>]"
+    # end
     def app_usage_expanded
       if @spec.base_commands.empty?
         @ui.puts("#{hdr 'Usage:'} #{@spec.invocation_name}"<<
@@ -130,6 +138,7 @@ private
         )
       end
     end
+    alias_method :app_usage, :app_usage_expanded
     def command_help_full cmd, rest
       all = @spec.find_all cmd
       case all.size
@@ -152,7 +161,7 @@ private
         if lines.size == 1
           @ui.puts "  #{lines.first}"
         else
-          @ui.puts "\n" << lines.map{|x| "#{@margin_a}#{x}"}
+          @ui.puts "\n" << lines.map{|x| "#{@margin_a}#{x}"} * "\n"
         end
       end
       list_options(cmd) if cmd.opts.any?
@@ -164,7 +173,7 @@ private
         @ui.puts opts_interpolate(cmd, cmd.usage * ' ')
       else
         @ui.puts(
-          [ cmd.opts.any? ? opts_string(cmd) : nil,
+          [ cmd.opts.any? ? " #{opts_string(cmd)}" : nil,
             cmd.args_usage_from_arity
           ].compact.join(' ')
         )
@@ -196,10 +205,8 @@ private
       width = matrix.map{|x| x[0] ? x[0].length : nil }.compact.max
       matrix.each do |row|
         @ui.puts hdr(row[2]) if row[2]
-        if @row[0] || @row[1]
-          @ui.puts sprintf(
-            "#{@margin_a}%#{width}s#{@margin_b}%s", [@row[0], @ros[1]]
-          )
+        if row[0] || row[1]
+          @ui.puts "#{@margin_a}%#{width}s#{@margin_b}%s" % [row[0], row[1]]
         end
       end
     end
@@ -215,7 +222,7 @@ private
       string.gsub('#{opts}'){|x| opts_string(cmd)}
     end
     def opts_string cmd
-      cmd.opts.map{|o| o.sytax_tokens}.flatten.join(' ')
+      cmd.opts.map{|o| o.syntax_tokens}.flatten.join(' ')
     end
   end
   module Lingual
@@ -230,7 +237,13 @@ private
       mixed.to_s.gsub(/[^a-z0-9_\?\!]/,'_')
     end
   end
+  module OptsLike
+  end
   module OptsBlock
+    include OptsLike
+  end
+  module OptsLike
+    # must implement: first_line, get_lines
   end
   module ServiceClass
     def init_service_class
@@ -241,6 +254,9 @@ private
     alias_method :app, :spec
     def o usage
       @spec.usage usage
+    end
+    def opts mixed
+      @spec.opts mixed
     end
     alias_method :usage, :o
     def run argv=ARGV.dup
@@ -330,9 +346,19 @@ private
         @desc = @opts = @usage = nil
       end
     end
-    def opts &block
+    def opts mixed=nil, &block
+      fail("won't take arg and block for command opts") if
+        (mixed && block)
       @desc ||= []
-      @desc.push OptsBlock.extend(block)
+      @opts ||= []
+      if block
+        @opts.push @desc.size
+        @desc.push OptsBlock.extend(block)
+      else
+        fail("opts must be OptsLike") unless mixed.kind_of?(OptsLike)
+        @opts.push @desc.size
+        @desc.push mixed
+      end
     end
     def unbound_method method_name
       @mod.instance_method method_name
