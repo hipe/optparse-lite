@@ -82,7 +82,7 @@ private
     def opts_sexp match
       return nil if @opt_indexes.empty? # no matter what u don't take options
       return nil if match.nil? # maybe want to have them but not show them?
-      [:opts, *opts.map{|o| o.syntax_tokens}.flatten]
+      [:opts, *opts.map{|o| o.syntax_tokens.map{|x| "[#{x}]"}}.flatten]
     end
     def unbound_method
       @spec.unbound_method method_name
@@ -463,19 +463,38 @@ module OptparseLite
   class OptParser
     def initialize(&block)
       @block = block
-      @specs = []
-      @names = {}
       @compiled = false
+      @items = []
+      @names = {}
+      @specs = []
     end
     def compile!
       instance_eval(&@block)
       @compiled = true
     end
-    def syntax_tokens
+    def doc_matrix
+      matrix = []
+      @items.each do |item|
+        if OptSpec===item
+          matrix.push [item.syntax_tokens*', ', item.desc.first]
+          matrix.concat(item.desc[1..-1].map{|x| [nil,x]}) if item.desc.size>1
+        else
+          matrix.push [nil,nil,item]
+        end
+      end
+      matrix
+    end
+    def specs
       compile! unless @compiled
-      @specs.map(&:syntax_token)
+      @specs.map{|idx| @items[idx]}
+    end
+    def syntax_tokens
+      specs.map{|x| x.syntax_tokens * ','}
     end
   private
+    def banner str
+      @items.push str
+    end
     def opt syntax, *extra
       spec = OptSpec.parse(syntax)
       opts = extra.last.kind_of?(Hash) ? extra.pop : {}
@@ -489,7 +508,8 @@ module OptparseLite
         fail("won't redefine existing opt name \"#{name}\"") if @names[name]
         @names[name] = @specs.size
       end
-      @specs.push spec
+      @specs.push @items.size
+      @items.push spec
     end
   end
   class OptSpec < Struct.new(:names, :takes_argument, :required,
@@ -546,11 +566,13 @@ module OptparseLite
         fail("parse parse fail: bad option syntax syntax: #{msg}")
       end
     end # class << self
-    def syntax_token
+    def syntax_tokens
       if noable
-        "[--[#{noable}]#{names.first}]"
+        ["--[#{noable}]#{names.first}"]
       else
-        '['+[(long + short).join(','), arg_name].compact.join('')+']'
+        these = long + short
+        these[these.length-1] = "#{these.last}#{arg_name}"
+        these
       end
     end
   private

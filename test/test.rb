@@ -323,7 +323,7 @@ module OptparseLite::Test
     include OptparseLite::OptsLike
     extend self
     def syntax_tokens
-       ['[--fake]', '[-b=<foo>]']
+       ['--fake', '-b=<foo>']
     end
     def doc_matrix
       [
@@ -410,7 +410,7 @@ module OptparseLite::Test
       @matrix
     end
     def syntax_tokens
-      @matrix.select{|x| x[0]}.compact.map{|x| "[#{x}]"}
+      @matrix.select{|x| x[0]}.compact
     end
   end
 
@@ -469,9 +469,13 @@ module OptparseLite::Test
     include OptparseLite
 
     opts {
+      banner 'Fun Options:'
       opt '-a, --alpha', 'desco', :foo
-      opt '-b, --beta=<foo>', 'desc2'
-      opt '--gamma[=<baz>]'
+      opt '-b, --beta=<foo>', 'desc for beta', :fooey, 'more desc for beta'
+      banner 'Eric Banner:'
+      banner 'not eric banner, just some desco'
+      banner 'another not banner, just some chit chat:'
+      opt '--gamma[=<baz>]','gamma is where it\'s at'
       opt '--[no-]mames', :juae
     }
     def do_it opts, a, b=nil
@@ -481,7 +485,8 @@ module OptparseLite::Test
   Finally.spec.invocation_name = "finally-app.rb"
 
   describe Finally do
-    it 'finally-app.rb must work' do
+
+    it 'finally-app.rb general help' do
       exp = <<-HERE.noindent
         \e[32;mUsage:\e[0m finally-app.rb (do-it) [<opts>] [<args>]
 
@@ -490,6 +495,23 @@ module OptparseLite::Test
         type -h after a command or subcommand name for more help
       HERE
       act = _run{ run [] }.strip
+      assert_no_diff(exp, act)
+    end
+
+    it 'finally-app.rb command help' do
+      exp = <<-HERE.noindent
+        \e[32;mUsage: \e[0m finally-app.rb do-it [--alpha,-a] [--beta,-b=<foo>] [--gamma[=<baz>]] [--[no-]mames] <arg1> [<arg2>]
+        \e[32;mFun Options:\e[0m
+               --alpha, -a    desco
+          --beta, -b=<foo>    desc for beta
+                              more desc for beta
+        \e[32;mEric Banner:\e[0m
+        not eric banner, just some desco
+        another not banner, just some chit chat:
+           --gamma[=<baz>]    gamma is where it's at
+              --[no-]mames
+      HERE
+      act = _run{ run ["-h", "do"] }.strip
       assert_no_diff(exp, act)
     end
   end
