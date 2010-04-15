@@ -51,3 +51,13 @@ MiniTest::Spec.send(:include, OptparseLite::Test::Helpers)
 if ARGV.include? '-v'
   OptparseLite::Test.verbose = true
 end
+
+# hack to turn off randomness, for running the simplest
+# test cases first
+if (idx = ARGV.index('--seed')) && '0'==ARGV[idx+1]
+  class MiniTest::TestCase
+    def test_order
+      :alpha
+    end
+  end
+end

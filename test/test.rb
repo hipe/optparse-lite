@@ -266,19 +266,11 @@ module OptparseLite::Test
   OptsStub = Object.new
   class << OptsStub
     include OptparseLite::OptsLike
-    def first_line
-      "fake first line"
-    end
-    def get_lines
-      ["fake multiline first line",
-       "fake mulitilne second line"
-      ]
-    end
     def syntax_tokens
-      ['[--fake]', '[-b=<foo>]']
+       ['[--fake]', '[-b=<foo>]']
     end
-    def doc_matrix arr
-      arr.concat [
+    def doc_matrix
+      [
         [nil, nil, 'Awesome Opts:'],
         ['-h,--hey','awesome desc'],
         ['-H,--HO=<ho>', 'awesome desc2']
@@ -299,7 +291,7 @@ module OptparseLite::Test
         \e[32;mUsage:\e[0m cmd-with-opts-app.rb (foo) [<opts>] [<args>]
 
         \e[32;mCommands:\e[0m
-          foo          fake first line
+          foo          usage: foo [--fake] [-b=<foo>]
         type -h after a command or subcommand name for more help
       HERE
       act = _run{ run [] }.strip
@@ -307,10 +299,7 @@ module OptparseLite::Test
     end
     it 'cmd-with-opts-app.rb multiline description stub' do
       exp = <<-HERE.noindent
-        \e[32;mUsage: \e[0m cmd-with-opts-app.rb foo [--fake] [-b=<foo>] <arg1>
-        \e[32;mDescription:\e[0m
-          fake multiline first line
-          fake mulitilne second line
+        \e[32;mUsage: \e[0m cmd-with-opts-app.rb foo [--fake] [-b=<foo>]
         \e[32;mAwesome Opts:\e[0m
               -h,--hey    awesome desc
           -H,--HO=<ho>    awesome desc2
@@ -320,14 +309,3 @@ module OptparseLite::Test
     end
   end
 end
-
-# describe Hipe::Gentest do
-#   exp = <<-HERE.noindent
-#     class Empty
-#       include OptparseLite
-#     end
-#     Empty.spec.invocation_name = "empty-app.rb"
-#   HERE
-#   file = File.expand_path('../../emp', __FILE__)
-#   assert(false, File.exist?(file))
-# end

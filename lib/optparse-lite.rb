@@ -20,27 +20,18 @@ private
   end
   module HelpHelper
   end
-  class Command < Struct.new(:spec, :method_name, :desc, :opts, :usage)
+  class Command
     include HelpHelper
-    def initialize *a
-      super(*a)
-      @opt_indexes = a[3] || []
-      self.desc  ||= []
-      self.usage ||= []
-      Descriptive[self.desc]
+    def initialize spec, method_name, desc=nil, opts=nil, usage=nil
+      @spec = spec
+      @method_name = method_name
+      @desc = DescriptionAndOpts.new(desc || [])
+      @opt_indexes = opts || []
+      @usage = usage || []
     end
-    def args_usage_from_arity
-      arity = unbound_method.arity
-      arity -= (arity > 0 ? 1 : -1) if opts.any?
-      args = (0..arity.abs-1).map{|i| "<arg#{i+1}>"}
-      if arity < 0
-        args.last.replace("[#{args.last}]") # too bad we can't etc
-      end
-      args.any? ? (args * ' ') : nil
-    end
+    attr_reader :desc, :usage, :method_name
     def desc_oneline
-      desc.any? ? desc.first_line : usage.any? ? usage_oneline_short :
-      opts.any? ? opts.first.desc_oneline : usage_from_arity_short
+      desc.any? ? desc.first_desc_line : "usage: #{syntax}"
     end
     def opts
       @opt_indexes.map{|x| desc[x]}
@@ -49,33 +40,64 @@ private
       method_name.gsub(/_/,'-')
     end
     alias_method :pretty_full, :pretty
+    def syntax_for_args
+      arity = unbound_method.arity
+      return nil if arity.zero?
+      arity -= (arity > 0 ? 1 : -1) if opts.any?
+      args = (0..arity.abs-1).map{|i| "<arg#{i+1}>"}
+      if arity < 0
+        args.last.replace("[#{args.last}]") # too bad we can't etc
+      end
+      args.any? ? (args * ' ') : nil
+    end
+    def syntax_for_opts
+      return nil if @opt_indexes.empty?
+      opts.map{|o| o.syntax_tokens}.flatten.join(' ')
+    end
+    def syntax
+      usage.any? ?
+      syntax_from_usage_short :
+      syntax_from_reflection_short
+    end
   private
+    def syntax_from_reflection_short
+      args = syntax_for_args
+      opts = syntax_for_opts
+      [pretty, opts, args].compact.join(' ')
+    end
+    def syntax_from_usage_short
+      "#{@spec.invocation_name} #{pretty_full} " << (usage * ' ')
+    end
     def unbound_method
-      spec.unbound_method method_name
-    end
-    def usage_from_arity_short
-      args = args_usage_from_arity
-      optz = opts.any? ? "<opts>" : nil
-      'usage: ' << [pretty, optz, args].compact.join(' ')
-    end
-    def usage_oneline_short
-      "usage: #{spec.invocation_name} #{pretty_full} " << (usage * ' ')
-    end
-  end
-  module Descriptive
-    class << self; def [](m); m.extend(self) end end
-    def get_lines
-      map{ |line|
-        line.kind_of?(String) ? line : line.get_lines
-      }.flatten
-    end
-    def first_line
-      first.kind_of?(String) ? first : first.first_line
+      @spec.unbound_method method_name
     end
   end
   class Description < Array
-    include Descriptive
+    class << self; def [](m); m.extend(self) end end
+    def get_desc_lines
+      self
+    end
+    def first_desc_line
+      first
+    end
   end
+  class DescriptionAndOpts < Array
+    def initialize arr
+      super(arr)
+    end
+    def get_desc_lines
+      select{|x| x.kind_of?(String) || x.kind_of?(DocBlock)}
+    end
+    def any?
+      detect{|x| x.kind_of?(String) || x.kind_of?(DocBlock)}
+    end
+    def first_desc_line
+      if (one = any?)
+        one.kind_of?(String) ? one : one.first_desc_line
+      end
+    end
+  end
+  module DocBlock; end
   class Dispatcher
     include HelpHelper
     def initialize impl, spec, ui
@@ -93,7 +115,7 @@ private
   end
   module HelpHelper
     def help_requested?(argv)
-      ['-h','--help','-?'].include? argv[0]
+      ['-h','--help','-?','help'].include? argv[0]
     end
     def hdr(str); "\e[32;m#{str}\e[0m" end
     alias_method :code, :hdr
@@ -119,7 +141,7 @@ private
     end
   private
     def app_description_full
-      lines = @spec.app_description.get_lines
+      lines = @spec.app_description.get_desc_lines
       @ui.puts lines.map{|line| "#{@margin_a}#{line}"}
     end
     # def app_usage
@@ -157,7 +179,7 @@ private
       command_usage cmd
       if cmd.desc.any?
         @ui.print hdr('Description:')
-        lines = cmd.desc.get_lines
+        lines = cmd.desc.get_desc_lines
         if lines.size == 1
           @ui.puts "  #{lines.first}"
         else
@@ -172,11 +194,12 @@ private
       if cmd.usage.any?
         @ui.puts opts_interpolate(cmd, cmd.usage * ' ')
       else
-        @ui.puts(
-          [ cmd.opts.any? ? " #{opts_string(cmd)}" : nil,
-            cmd.args_usage_from_arity
-          ].compact.join(' ')
-        )
+        any = [
+          cmd.syntax_for_opts,
+          cmd.syntax_for_args
+        ].compact.join(' ')
+        any = " #{any}" if any.length > 0
+        @ui.puts any
       end
     end
     def invite_to_more_command_help
@@ -197,7 +220,7 @@ private
     def list_options cmd
       matrix = []
       cmd.opts.each do |parser|
-        parser.doc_matrix matrix
+        matrix.concat parser.doc_matrix
       end
       unless matrix.first[2]
         @ui.puts hdr('Options:')
@@ -219,10 +242,7 @@ private
       invite_to_more_command_help
     end
     def opts_interpolate cmd, string
-      string.gsub('#{opts}'){|x| opts_string(cmd)}
-    end
-    def opts_string cmd
-      cmd.opts.map{|o| o.syntax_tokens}.flatten.join(' ')
+      string.gsub('#{opts}'){|x| cmd.opts_syntax }
     end
   end
   module Lingual
@@ -243,7 +263,7 @@ private
     include OptsLike
   end
   module OptsLike
-    # must implement: first_line, get_lines
+
   end
   module ServiceClass
     def init_service_class
