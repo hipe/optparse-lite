@@ -24,7 +24,10 @@ end
 
 Rake::GemPackageTask.new(spec){}
 
-Rake::TestTask.new()
+Rake::TestTask.new do |t|
+  t.verbose = true
+  t.warning = true
+end
 
 desc "generate rcov coverage"
 task :rcov do

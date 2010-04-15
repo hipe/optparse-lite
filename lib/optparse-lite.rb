@@ -27,6 +27,7 @@ private
       @method_name = method_name
       @desc = DescriptionAndOpts.new(desc || [])
       @opt_indexes = opts || []
+      @syntax_sexp = nil
       @usage = usage || []
       @usage_parse = nil
     end
@@ -41,7 +42,7 @@ private
       implementor.send(method_name, *argv)
     end
     def pretty
-      method_name.gsub(/_/,'-')
+      method_name.gsub(/_/,'-') # @todo
     end
     alias_method :pretty_full, :pretty
     # local, don't look up! (?)
@@ -49,14 +50,14 @@ private
       return @syntax_sexp unless @syntax_sexp.nil?
       # no support for union grammars yet (or evar!) (like git-branch).
       usage = @usage.any? ? @usage.join(' ') : '[<opts>] [<args>]'
-      if /\A(\[<opts>\] *)?(.*)\Z/ !~ usage
-        @syntax_sexp = false
-      else
-        @syntax_sexp = [cmds_sexp, opts_sexp($1), args_sexp($2)].compact
-      end
+      md = (/\A(\[<opts>\] *)?(.*)\Z/m).match(usage) # matches all strings
+      @syntax_sexp = [cmds_sexp, opts_sexp(md[1]), args_sexp(md[2])].compact
     end
   private
     def args_sexp str
+      # @todo: note that when it doesn't parse '[<opts>]' in the usage string
+      # then all opts are treated as args here. so this (for now) should only
+      # be used for presentation stuff (of course we could etc...)
       return args_sexp_from_arity if %w([<args>] <args>).include?(str)
       return [:args, *str.split(' ')] # yup that's what i said
     end
@@ -211,15 +212,9 @@ private
       list_options(cmd) if cmd.opts.any?
     end
     def command_usage cmd
-      sexp = command_syntax_sexp(cmd).dup # b/c of unshift below
+      sexp = cmd.syntax_sexp.dup # b/c of unshift below
       sexp.unshift([:cmds, @spec.invocation_name])
       @ui.puts hdr("Usage: ")+' '+stylize(sexp) # @todo fix
-    end
-    def command_syntax_sexp cmd
-      sexp = cmd.syntax_sexp and return sexp
-      sexp = [[:cmds, cmd.pretty_full]]
-      line = cmd.usage_oneline and sexp.push([:txt, line])
-      sexp
     end
     def invite_to_more_command_help
       @ui.puts "type -h after a command or subcommand name for more help"
@@ -230,8 +225,11 @@ private
     def list_commands cmds
       width = cmds.map{|c| c.pretty.length}.max
       cmds.each do |c|
+        require 'ruby-debug'
+        # debugger;
+        # c.pretty
         cmd_desc = c.desc_oneline
-        cmd_desc ||= 'usage: '+stylize(command_syntax_sexp(c))
+        cmd_desc ||= 'usage: '+stylize(c.syntax_sexp)
         @ui.puts "#{@margin_a}%-#{width}s#{@margin_b}#{cmd_desc}" % [c.pretty]
       end
     end
@@ -257,9 +255,6 @@ private
       list_commands cmds
       invite_to_more_command_help
     end
-    def opts_interpolate cmd, string
-      string.gsub('#{opts}'){|x| cmd.opts_syntax }
-    end
     def stylize sexp
       parts = []
       sexp.each do |node|      # non-empty children else xtra spaces
@@ -267,8 +262,6 @@ private
         when :cmds; parts.push node[1..-1].map{|c| cmd(c)}.join(' ')
         when :opts; parts.push node[1..-1].join(' ')
         when :args; parts.push node[1..-1].join(' ')
-        when :txt;  parts.push node[1..-1].join(' ')
-        else        parts.push node
         end
       end
       parts * ' '
@@ -296,6 +289,7 @@ private
   end
   module ServiceClass
     def init_service_class
+      @instance ||= nil
       @spec = Spec.new(self)
       @ui = Ui.new
     end
@@ -310,14 +304,12 @@ private
     alias_method :usage, :o
     def run argv=ARGV
       argv = argv.dup # never change caller's array
-      unless OptparseLite.run_enabled?
-        @ui.err.puts('run disabled. (probably for gentesting)')
-        return
-      end
-      @instance ||= begin
+      return @ui.err.puts('run disabled. (probably for gentesting)') unless
+        OptparseLite.run_enabled?
+      unless @instance # rcov bug?
         obj = new
         obj.init_service_object(@spec, @ui)
-        obj
+        @instance = obj
       end
       @instance.run argv
     end
@@ -353,15 +345,14 @@ private
       @names = {}
       @mod = mod
       @order = []
-      @spec = @usage = @opts = nil
+      @desc = @opts = @spec = @usage = nil
     end
     attr_reader :app_description
     def base_commands
-      @base_commands ||= begin
+      @base_commands ||=
         (@order &  @mod.public_instance_methods(false)).map do |meth|
           get_command(meth)
         end
-      end
     end
     def cmd_desc desc
       @desc ||= []
@@ -372,7 +363,7 @@ private
     end
     def find_all name
       meth = methodize(name)
-      re = /^#{Regexp.escape(name)}/
+      re = /^#{Regexp.escape(meth)}/
       (@order & (
         @mod.public_instance_methods(false) |
         @commands.map{|x| x.method_name }
@@ -397,19 +388,12 @@ private
         @desc = @opts = @usage = nil
       end
     end
-    def opts mixed=nil, &block
-      fail("won't take arg and block for command opts") if
-        (mixed && block)
+    def opts mixed
       @desc ||= []
       @opts ||= []
-      if block
-        @opts.push @desc.size
-        @desc.push OptsBlock.extend(block)
-      else
-        fail("opts must be OptsLike") unless mixed.kind_of?(OptsLike)
-        @opts.push @desc.size
-        @desc.push mixed
-      end
+      fail("opts must be OptsLike") unless mixed.kind_of?(OptsLike)
+      @opts.push @desc.size
+      @desc.push mixed
     end
     def unbound_method method_name
       @mod.instance_method method_name

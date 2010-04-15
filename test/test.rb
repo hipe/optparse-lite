@@ -364,4 +364,23 @@ module OptparseLite::Test
       assert_no_diff(exp, act)
     end
   end
+
+
+  class CovPatch
+    include OptparseLite
+    usage '[-blah -blah] <blah1> <blah2>'
+    def wierd_usage
+    end
+  end
+  CovPatch.spec.invocation_name = "cov-patch-app.rb"
+
+  describe CovPatch do
+    it 'cov-patch-app.rb displays wierd usage (no validation!?)' do # @todo
+      exp = <<-HERE.noindent
+        \e[32;mUsage: \e[0m cov-patch-app.rb wierd-usage [-blah -blah] <blah1> <blah2>
+      HERE
+      act = _run{ run ["-h", "wierd-"] }.strip
+      assert_no_diff(exp, act)
+    end
+  end
 end
