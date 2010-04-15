@@ -31,11 +31,29 @@ module OptparseLite::Test
 
   class OneMeth
     include OptparseLite
-    def bar; end
+    def bar; 'done' end
   end
   OneMeth.spec.invocation_name = "one-meth-app.rb"
 
   describe OneMeth do
+
+    it 'one-meth-app.rb runs' do
+      assert_equal('done', OneMeth.run(['bar']))
+    end
+
+
+    it "one-meth-app.rb works like help
+      when the command is not found.
+    " do
+      exp = <<-HERE.noindent
+        i don't know how to \e[32;mbazzle\e[0m.
+        try \e[32;mone-meth-app.rb -h\e[0m for help.
+      HERE
+      act = _run{ run ["bazzle"] }.strip
+      assert_no_diff(exp, act)
+    end
+
+
     it 'one-meth-app.rb ask for help must work' do
       exp = <<-HERE.noindent
         \e[32;mUsage:\e[0m one-meth-app.rb (bar) [<opts>] [<args>]
@@ -47,6 +65,8 @@ module OptparseLite::Test
       act = _run{ run ["-h"] }.strip
       assert_no_diff(exp, act)
     end
+
+
     it 'one-meth-app.rb no args must work' do
       exp = <<-HERE.noindent
         \e[32;mUsage:\e[0m one-meth-app.rb (bar) [<opts>] [<args>]
@@ -58,6 +78,8 @@ module OptparseLite::Test
       act = _run{ run [] }.strip
       assert_no_diff(exp, act)
     end
+
+
     it 'one-meth-app.rb ask for help bad command must work' do
       exp = <<-HERE.noindent
         i don't know how to \e[32;mska\e[0m.
@@ -66,6 +88,8 @@ module OptparseLite::Test
       act = _run{ run ["-h", "ska"] }.strip
       assert_no_diff(exp, act)
     end
+
+
     it 'one-meth-app.rb ask for help partial match must work' do
       exp = <<-HERE.noindent
         \e[32;mUsage: \e[0m one-meth-app.rb bar
@@ -73,6 +97,8 @@ module OptparseLite::Test
       act = _run{ run ["-h", "b"] }.strip
       assert_no_diff(exp, act)
     end
+
+
     it 'one-meth-app.rb ask for help full match must work' do
       exp = <<-HERE.noindent
         \e[32;mUsage: \e[0m one-meth-app.rb bar
@@ -263,9 +289,9 @@ module OptparseLite::Test
   end
 
 
-  OptsStub = Object.new
-  class << OptsStub
+  module OptsStub
     include OptparseLite::OptsLike
+    extend self
     def syntax_tokens
        ['[--fake]', '[-b=<foo>]']
     end

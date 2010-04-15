@@ -32,3 +32,14 @@ task :rcov do
 end
 
 FileList['tasks/**/*.rake'].each { |task| import task }
+
+
+desc "hack turns the installed gem into a symlink to this directory"
+task :hack do
+  kill_path = %x{gem which optparse-lite}
+  kill_path = File.dirname(File.dirname(kill_path))
+  new_name  = File.dirname(kill_path)+'/ok-to-erase-'+File.basename(kill_path)
+  FileUtils.mv(kill_path, new_name, :verbose => 1)
+  this_path = File.dirname(__FILE__)
+  FileUtils.ln_s(this_path, kill_path, :verbose => 1)
+end

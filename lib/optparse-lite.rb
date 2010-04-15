@@ -36,6 +36,9 @@ private
     def opts
       @opt_indexes.map{|x| desc[x]}
     end
+    def run implementor, argv
+      implementor.send(method_name, *argv)
+    end
     def pretty
       method_name.gsub(/_/,'-')
     end
@@ -77,9 +80,6 @@ private
     def get_desc_lines
       self
     end
-    def first_desc_line
-      first
-    end
   end
   class DescriptionAndOpts < Array
     def initialize arr
@@ -109,7 +109,11 @@ private
     def run argv
       return @help.no_args         if argv.empty?
       return @help.requested(argv) if help_requested?(argv)
-      puts "ok, running"
+      if cmd = @help.find_one_loudly(argv.shift)
+        cmd.run(@impl, argv)
+      else
+        -1 # kind of silly but whatever
+      end
     end
   private
   end
@@ -127,6 +131,22 @@ private
       @margin_b = '    '
       @spec = spec
       @ui = ui
+    end
+    def find_one_loudly cmd
+      all = @spec.find_all cmd
+      case all.size
+      when 0
+        @ui.puts "i don't know how to #{code cmd}."
+        invite_to_more_help
+        nil
+      when 1
+        all.first
+      else
+        @ui.puts "did you mean " <<
+          oxford_comma(all.map{|x| code(x.pretty)}, ' or ') << '?'
+        invite_to_more_help
+        nil
+      end
     end
     def requested argv
       return command_help_full(argv[1], argv[2..-2]) if argv.size > 1
@@ -162,17 +182,8 @@ private
     end
     alias_method :app_usage, :app_usage_expanded
     def command_help_full cmd, rest
-      all = @spec.find_all cmd
-      case all.size
-      when 0
-        @ui.puts "i don't know how to #{code cmd}."
-        invite_to_more_help
-      when 1
-        command_help_full_actual all.first, rest
-      else
-        @ui.puts "did you mean " <<
-          oxford_comma(all.map{|x| code(x.pretty)}, ' or ') << '?'
-        invite_to_more_help
+      if found = find_one_loudly(cmd)
+        command_help_full_actual found, rest
       end
     end
     def command_help_full_actual cmd, rest
@@ -279,7 +290,8 @@ private
       @spec.opts mixed
     end
     alias_method :usage, :o
-    def run argv=ARGV.dup
+    def run argv=ARGV
+      argv = argv.dup # never change caller's array
       unless OptparseLite.run_enabled?
         @ui.err.puts('run disabled. (probably for gentesting)')
         return

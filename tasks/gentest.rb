@@ -234,6 +234,7 @@ module Hipe::GenTest
         lines = self.lines[start_offset..end_offset]
         # the below two are the only really optparselite-specific things here
         lines.unshift "require 'optparse-lite' unless defined? OptparseLite"
+        lines.unshift "#!/usr/bin/env ruby"
         lines.push "  #{@last_mod}.run" if @last_mod
         lines
       end
