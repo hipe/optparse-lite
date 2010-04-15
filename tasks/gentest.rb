@@ -153,3 +153,110 @@ private
     mod.ui.pop
   end
 end
+
+module Hipe::GenTest
+  def ungentest_list test_file
+    ungen(test_file).list
+  end
+  def ungentest test_file, chunk_name
+    ungen(test_file).ungen chunk_name
+  end
+  def ungen test_file
+    Ungen.new(test_file)
+  end
+  class Ungen
+    def initialize test_file
+      @test_file = test_file
+      @ui = $stdout
+    end
+    def list
+      tree = parse_file @test_file
+      @ui.puts tree.chunk_names
+    end
+    def ungen name
+      @tree = parse_file @test_file
+      name = find_one_loudly name
+      return unless name
+      lines = @tree.get_code_lines(name)
+      lines.map!{|x| x.gsub(/^  /,'') }
+      @ui.puts lines
+    end
+  private
+    def find_one_loudly name
+      re = /^#{Regexp.escape(name)}/
+      items = @tree.chunk_names.grep(re)
+      if items.size != items.uniq.size
+        fail("can't work with multiple entries of the same name in list: "<<
+          items.map{|x| "\"#{x}\""}.join(', ')
+        )
+      end
+      if items.size == 0
+        @ui.puts("coudn't find any items matching \"#{name}\" in list.  "<<
+          "please see -items for items of available items"
+        )
+        return
+      end
+      if items.size > 1
+        if items.include? name
+          return name
+        else
+          @ui.puts("which one did you mean? "<<items.join(' or '))
+          return
+        end
+      end
+      return items.first
+    end
+    def parse_file test_file
+      Indexes.new(test_file)
+    end
+    class Indexes < Array
+      def initialize test_file
+        fail("file not found: #{test_file}") unless File.exist?(test_file)
+        lines = File.read(test_file).split("\n")
+        class << self; self end.send(:define_method, :lines){lines}
+        lines.each_with_index do |line, idx|
+          case line
+          when /^  class ([a-z0-9:]+)/i;    push [:class, idx, $1]
+          when /^  module ([a-z0-9:]+)/i;   push [:module, idx, $1]
+          when /^  describe\b/; push [:describe, idx]
+          when /^ +it '([a-z0-9]+(?:-[a-z0-9]+)*-app\.rb)/
+            if last && last[2] != $1
+              push [:it, idx, $1]
+            end
+          end
+        end
+      end
+      def chunk_names
+        select{|x| x.first == :it }.map{|x| x[2]}
+      end
+      def get_code_lines name
+        start_offset, end_offset = get_offsets name
+        lines = self.lines[start_offset..end_offset]
+        # the below two are the only really optparselite-specific things here
+        lines.unshift "require 'optparse-lite' unless defined? OptparseLite"
+        lines.push "  #{@last_mod}.run" if @last_mod
+        lines
+      end
+      def get_offsets name
+        idx = index{|x| x.first==:it && x[2]==name}
+        inf = self[idx]
+        fail("no") unless self[idx-1].first == :describe
+        # the last line of the chunk before the describe
+        end_offset = self[idx-1][1] - 1
+        start_cur = idx - 2
+        cur = start_cur
+        @last_mod = nil
+        while cur > -1 && [:module, :class].include?(self[cur].first)
+          @last_mod ||= self[cur][2]
+          cur -= 1
+        end
+        cur += 1
+        if cur > start_cur
+          fail("classes or modules not found for #{name}")
+        end
+        start_offset = self[cur][1]
+        [start_offset, end_offset]
+      end
+    end
+  end
+end
