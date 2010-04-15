@@ -27,6 +27,7 @@ private
       self.desc  ||= []
       self.opts  ||= []
       self.usage ||= []
+      Descriptive[self.desc]
     end
     def args_usage_from_arity
       arity = unbound_method.arity
@@ -58,10 +59,14 @@ private
       "usage: #{spec.invocation_name} #{pretty_full} " << (usage * ' ')
     end
   end
-  class Description < Array
+  module Descriptive
+    class << self; def [](m); m.extend(self) end end
     def get_lines
       self
     end
+  end
+  class Description < Array
+    include Descriptive
   end
   class Dispatcher
     include HelpHelper
@@ -120,7 +125,7 @@ private
         )
       else
         @ui.puts("#{hdr 'Usage:'} #{@spec.invocation_name} {"<<
-          oxford_comma(@spec.base_commands.map{|c| c.pretty },' | ')<<
+          @spec.base_commands.map{|c| c.pretty }*'|'<<
           '} [<opts>] [<args>]'
         )
       end
@@ -143,7 +148,7 @@ private
       command_usage cmd
       if cmd.desc.any?
         @ui.print hdr('Description:')
-        lines = @cmd.desc.get_lines
+        lines = cmd.desc.get_lines
         if lines.size == 1
           @ui.puts "  #{lines.first}"
         else

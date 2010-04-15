@@ -1,4 +1,3 @@
-require 'ruby-debug'
 require File.dirname(__FILE__)+'/optparse-lite-test-setup.rb'
 
 module OptparseLite::Test
@@ -162,6 +161,14 @@ module OptparseLite::Test
       act = _run{ run [] }.strip
       assert_no_diff(exp, act)
     end
+    it 'one-meth-desc-app.rb ask for help must work' do
+      exp = <<-HERE.noindent
+        \e[32;mUsage: \e[0m one-meth-desc-app.rb bar
+        \e[32;mDescription:\e[0m  this is for barring
+      HERE
+      act = _run{ run ["-h", "bar"] }.strip
+      assert_no_diff(exp, act)
+    end
   end
 
   class OneMethUsage
@@ -178,6 +185,31 @@ module OptparseLite::Test
 
         \e[32;mCommands:\e[0m
           bar          usage: one-meth-usage-app.rb bar <paint> <ball>
+        type -h after a command or subcommand name for more help
+      HERE
+      act = _run{ run [] }.strip
+      assert_no_diff(exp, act)
+    end
+  end
+
+  class ThreeMeth
+    include OptparseLite
+    def foo; end
+    def bar; end
+    def faz; end
+  end
+  ThreeMeth.spec.invocation_name = "three-meth-app.rb"
+  ThreeMeth.spec.invocation_name = "three-meth-app.rb"
+
+  describe ThreeMeth do
+    it 'three-meth-app.rb no args must work' do
+      exp = <<-HERE.noindent
+        \e[32;mUsage:\e[0m three-meth-app.rb {foo|bar|faz} [<opts>] [<args>]
+
+        \e[32;mCommands:\e[0m
+          foo          usage: foo
+          bar          usage: bar
+          faz          usage: faz
         type -h after a command or subcommand name for more help
       HERE
       act = _run{ run [] }.strip
