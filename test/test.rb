@@ -108,6 +108,36 @@ module OptparseLite::Test
     end
   end
 
+  class PersistentService
+    include OptparseLite
+    def initialize
+      @num = 0
+    end
+    def ping
+      @num += 1
+      ui.puts "i have pinged #{@num} times"
+    end
+  end
+  PersistentService.spec.invocation_name = "persistent-service-app.rb"
+
+  describe PersistentService do
+    it "persistent-service-app.rb will use the same object
+    each time it fulfills a request.
+    " do
+      exp = <<-HERE.noindent
+        i have pinged 1 times
+      HERE
+      act = _run{ run ["ping"] }.strip
+      assert_no_diff(exp, act)
+      exp = <<-HERE.noindent
+        i have pinged 2 times
+      HERE
+      act = _run{ run ["ping"] }.strip
+      assert_no_diff(exp, act)
+    end
+  end
+
+
   module NoOptparseLiteForU
   end
   describe NoOptparseLiteForU do

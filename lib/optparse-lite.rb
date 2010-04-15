@@ -320,6 +320,7 @@ private
     def run argv
       @dispatcher.run argv
     end
+    attr_accessor :ui; private :ui # avoid warnings
   end
   class Sio < StringIO
     def to_str; idx = tell; rewind; str = read; seek(idx); str end
