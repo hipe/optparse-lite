@@ -124,9 +124,9 @@ private
           " (this screen. no commands defined.)"
         )
       else
-        @ui.puts("#{hdr 'Usage:'} #{@spec.invocation_name} {"<<
+        @ui.puts("#{hdr 'Usage:'} #{@spec.invocation_name} ("<<
           @spec.base_commands.map{|c| c.pretty }*'|'<<
-          '} [<opts>] [<args>]'
+          ') [<opts>] [<args>]'
         )
       end
     end

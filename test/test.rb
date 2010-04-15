@@ -49,7 +49,7 @@ module OptparseLite::Test
     end
     it 'one-meth-app.rb no args must work' do
       exp = <<-HERE.noindent
-        \e[32;mUsage:\e[0m one-meth-app.rb {bar} [<opts>] [<args>]
+        \e[32;mUsage:\e[0m one-meth-app.rb (bar) [<opts>] [<args>]
 
         \e[32;mCommands:\e[0m
           bar          usage: bar
@@ -105,7 +105,7 @@ module OptparseLite::Test
   describe OneMethWithNegArity do
     it 'one-meth-with-neg-arity-app.rb must work' do
       exp = <<-HERE.noindent
-        \e[32;mUsage:\e[0m one-meth-with-neg-arity-app.rb {bar} [<opts>] [<args>]
+        \e[32;mUsage:\e[0m one-meth-with-neg-arity-app.rb (bar) [<opts>] [<args>]
 
         \e[32;mCommands:\e[0m
           bar          usage: bar [<arg1>]
@@ -126,7 +126,7 @@ module OptparseLite::Test
   describe OneMethWithPosArity do
     it 'one-meth-with-pos-arity-app.rb must work' do
       exp = <<-HERE.noindent
-        \e[32;mUsage:\e[0m one-meth-with-pos-arity-app.rb {bar} [<opts>] [<args>]
+        \e[32;mUsage:\e[0m one-meth-with-pos-arity-app.rb (bar) [<opts>] [<args>]
 
         \e[32;mCommands:\e[0m
           bar          usage: bar <arg1>
@@ -151,7 +151,7 @@ module OptparseLite::Test
   describe OneMethDesc do
     it 'one-meth-desc-app.rb must work' do
       exp = <<-HERE.noindent
-        \e[32;mUsage:\e[0m one-meth-desc-app.rb {bar} [<opts>] [<args>]
+        \e[32;mUsage:\e[0m one-meth-desc-app.rb (bar) [<opts>] [<args>]
           when u wanna have a good time
 
         \e[32;mCommands:\e[0m
@@ -181,7 +181,7 @@ module OptparseLite::Test
   describe OneMethUsage do
     it 'one-meth-usage-app.rb must work' do
       exp = <<-HERE.noindent
-        \e[32;mUsage:\e[0m one-meth-usage-app.rb {bar} [<opts>] [<args>]
+        \e[32;mUsage:\e[0m one-meth-usage-app.rb (bar) [<opts>] [<args>]
 
         \e[32;mCommands:\e[0m
           bar          usage: one-meth-usage-app.rb bar <paint> <ball>
@@ -204,7 +204,7 @@ module OptparseLite::Test
   describe ThreeMeth do
     it 'three-meth-app.rb no args must work' do
       exp = <<-HERE.noindent
-        \e[32;mUsage:\e[0m three-meth-app.rb {foo|bar|faz} [<opts>] [<args>]
+        \e[32;mUsage:\e[0m three-meth-app.rb (foo|bar|faz) [<opts>] [<args>]
 
         \e[32;mCommands:\e[0m
           foo          usage: foo
