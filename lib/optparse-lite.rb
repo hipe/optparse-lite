@@ -28,13 +28,14 @@ private
       @desc = DescriptionAndOpts.new(desc || [])
       @opt_indexes = opts || []
       @usage = usage || []
+      @usage_parse = nil
     end
     attr_reader :desc, :usage, :method_name
     def desc_oneline
-      desc.any? ? desc.first_desc_line : "usage: #{syntax}"
+      desc.any? ? desc.first_desc_line : nil
     end
     def opts
-      @opt_indexes.map{|x| desc[x]}
+      @opt_indexes.map{|x| @desc[x]}
     end
     def run implementor, argv
       implementor.send(method_name, *argv)
@@ -43,7 +44,23 @@ private
       method_name.gsub(/_/,'-')
     end
     alias_method :pretty_full, :pretty
-    def syntax_for_args
+    # local, don't look up! (?)
+    def syntax_sexp
+      return @syntax_sexp unless @syntax_sexp.nil?
+      # no support for union grammars yet (or evar!) (like git-branch).
+      usage = @usage.any? ? @usage.join(' ') : '[<opts>] [<args>]'
+      if /\A(\[<opts>\] *)?(.*)\Z/ !~ usage
+        @syntax_sexp = false
+      else
+        @syntax_sexp = [cmds_sexp, opts_sexp($1), args_sexp($2)].compact
+      end
+    end
+  private
+    def args_sexp str
+      return args_sexp_from_arity if %w([<args>] <args>).include?(str)
+      return [:args, *str.split(' ')] # yup that's what i said
+    end
+    def args_sexp_from_arity
       arity = unbound_method.arity
       return nil if arity.zero?
       arity -= (arity > 0 ? 1 : -1) if opts.any?
@@ -51,28 +68,20 @@ private
       if arity < 0
         args.last.replace("[#{args.last}]") # too bad we can't etc
       end
-      args.any? ? (args * ' ') : nil
+      [:args, *args]
     end
-    def syntax_for_opts
-      return nil if @opt_indexes.empty?
-      opts.map{|o| o.syntax_tokens}.flatten.join(' ')
+    def cmds_sexp
+      [:cmds, pretty_full] # @todo later
     end
-    def syntax
-      usage.any? ?
-      syntax_from_usage_short :
-      syntax_from_reflection_short
-    end
-  private
-    def syntax_from_reflection_short
-      args = syntax_for_args
-      opts = syntax_for_opts
-      [pretty, opts, args].compact.join(' ')
-    end
-    def syntax_from_usage_short
-      "#{@spec.invocation_name} #{pretty_full} " << (usage * ' ')
+    def opts_sexp match
+      return nil if @opt_indexes.empty? # no matter what u don't take options
+      return nil if match.nil? # maybe want to have them but not show them?
+      [:opts, *opts.map{|o| o.syntax_tokens}.flatten]
     end
     def unbound_method
       @spec.unbound_method method_name
+    end
+    def usage_parse
     end
   end
   class Description < Array
@@ -122,6 +131,8 @@ private
       ['-h','--help','-?','help'].include? argv[0]
     end
     def hdr(str); "\e[32;m#{str}\e[0m" end
+    def txt(str); str end
+    def cmd(str); str end # @todo change to underline
     alias_method :code, :hdr
   end
   class Help
@@ -200,18 +211,15 @@ private
       list_options(cmd) if cmd.opts.any?
     end
     def command_usage cmd
-      @ui.print hdr("Usage: ") <<
-        " #{@spec.invocation_name} #{cmd.pretty_full}"
-      if cmd.usage.any?
-        @ui.puts opts_interpolate(cmd, cmd.usage * ' ')
-      else
-        any = [
-          cmd.syntax_for_opts,
-          cmd.syntax_for_args
-        ].compact.join(' ')
-        any = " #{any}" if any.length > 0
-        @ui.puts any
-      end
+      sexp = command_syntax_sexp(cmd).dup # b/c of unshift below
+      sexp.unshift([:cmds, @spec.invocation_name])
+      @ui.puts hdr("Usage: ")+' '+stylize(sexp) # @todo fix
+    end
+    def command_syntax_sexp cmd
+      sexp = cmd.syntax_sexp and return sexp
+      sexp = [[:cmds, cmd.pretty_full]]
+      line = cmd.usage_oneline and sexp.push([:txt, line])
+      sexp
     end
     def invite_to_more_command_help
       @ui.puts "type -h after a command or subcommand name for more help"
@@ -223,9 +231,9 @@ private
       width = cmds.map{|c| c.pretty.length}.max +
         @margin_a.length + @margin_b.length
       cmds.each do |c|
-        @ui.puts sprintf(
-          "#{@margin_a}%-#{width}s#{@margin_b}#{c.desc_oneline}",c.pretty
-        )
+        cmd_desc = c.desc_oneline
+        cmd_desc ||= 'usage: '+stylize(command_syntax_sexp(c))
+        @ui.puts "#{@margin_a}%-#{width}s#{@margin_b}#{cmd_desc}" % [c.pretty]
       end
     end
     def list_options cmd
@@ -233,9 +241,7 @@ private
       cmd.opts.each do |parser|
         matrix.concat parser.doc_matrix
       end
-      unless matrix.first[2]
-        @ui.puts hdr('Options:')
-      end
+      @ui.puts hdr('Options:') unless matrix.first[2]
       width = matrix.map{|x| x[0] ? x[0].length : nil }.compact.max
       matrix.each do |row|
         @ui.puts hdr(row[2]) if row[2]
@@ -254,6 +260,19 @@ private
     end
     def opts_interpolate cmd, string
       string.gsub('#{opts}'){|x| cmd.opts_syntax }
+    end
+    def stylize sexp
+      parts = []
+      sexp.each do |node|      # non-empty children else xtra spaces
+        case node.first
+        when :cmds; parts.push node[1..-1].map{|c| cmd(c)}.join(' ')
+        when :opts; parts.push node[1..-1].join(' ')
+        when :args; parts.push node[1..-1].join(' ')
+        when :txt;  parts.push node[1..-1].join(' ')
+        else        parts.push node
+        end
+      end
+      parts * ' '
     end
   end
   module Lingual

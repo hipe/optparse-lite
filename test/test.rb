@@ -240,7 +240,7 @@ module OptparseLite::Test
         \e[32;mUsage:\e[0m one-meth-usage-app.rb (bar) [<opts>] [<args>]
 
         \e[32;mCommands:\e[0m
-          bar          usage: one-meth-usage-app.rb bar <paint> <ball>
+          bar          usage: bar <paint> <ball>
         type -h after a command or subcommand name for more help
       HERE
       act = _run{ run [] }.strip
