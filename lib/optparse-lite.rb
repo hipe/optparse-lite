@@ -279,12 +279,10 @@ private
     end
   end
   module OptsLike
+    # syntax_tokens, doc_matrix
   end
   module OptsBlock
     include OptsLike
-  end
-  module OptsLike
-
   end
   module ServiceClass
     def init_service_class
@@ -297,8 +295,8 @@ private
     def o usage
       @spec.usage usage
     end
-    def opts mixed
-      @spec.opts mixed
+    def opts mixed=nil, &block
+      @spec.opts(mixed, &block)
     end
     alias_method :usage, :o
     def run argv=ARGV
@@ -387,10 +385,15 @@ private
         @desc = @opts = @usage = nil
       end
     end
-    def opts mixed
+    def opts mixed=nil, &block
       @desc ||= []
       @opts ||= []
-      fail("opts must be OptsLike") unless mixed.kind_of?(OptsLike)
+      fail("can't take block and arg") if mixed && block
+      if block
+        mixed = OptParser.new(&block)
+      else
+        fail("opts must be OptsLike") unless mixed.kind_of?(OptsLike)
+      end
       @opts.push @desc.size
       @desc.push mixed
     end
@@ -432,5 +435,124 @@ private
       @out = @stack.pop
       ret
     end
+  end
+end
+
+# temporary? as minimal as reasonable option parsing below
+module OptparseLite
+  module ReExtra
+    # consumes string, allows for named captures
+    class << self
+      def[](re,*names)
+        re.extend(self)
+        re.names = names
+        re
+      end
+    end
+    attr_accessor :names
+    def parse str
+      if md = match(str)
+        caps = md.captures
+        str.replace str[md.offset(0)[1]..-1]
+        sing = class << caps; self end
+        names.each_with_index{|(n,i)| sing.send(:define_method,n){self[i]}}
+        caps
+      end
+    end
+  end
+  class OptParser
+    def initialize(&block)
+      @block = block
+      @specs = []
+      @names = {}
+      @compiled = false
+    end
+    def compile!
+      instance_eval(&@block)
+      @compiled = true
+    end
+    def syntax_tokens
+      compile! unless @compiled
+      @specs.map(&:syntax_token)
+    end
+  private
+    def opt syntax, *extra
+      spec = OptSpec.parse(syntax)
+      opts = extra.last.kind_of?(Hash) ? extra.pop : {}
+      unless opts[:accessor]
+        idxs = extra.each_with_index.map{|(m,i)| Symbol===m ? i : nil}.compact
+        fail("can't have more than one symbol in definition") if idxs.size > 1
+        opts[:accessor] = extra.slice!(idxs.first) if idxs.any?
+      end
+      spec.desc = extra
+      spec.names.each do |name|
+        fail("won't redefine existing opt name \"#{name}\"") if @names[name]
+        @names[name] = @specs.size
+      end
+      @specs.push spec
+    end
+  end
+  class OptSpec < Struct.new(:names, :takes_argument, :required,
+    :optional, :arg_name, :short, :long, :noable, :desc, :accessor)
+    alias_method :required?, :required
+    alias_method :optional?, :optional
+    alias_method :takes_argument?, :takes_argument
+    # def name
+    #   long.any? ? long.first : short.first
+    # end
+    @short_long = ReExtra[
+      /\A *(?:-([a-z0-9])|--(?:\[(no-)\])?([a-z0-9][-a-z0-9]+)) */i,
+               :short,           :no,      :long
+    ]
+    required = /   (= \s*     (?:  <[a-z_][-a-z_]*>  |  [A-Z_]+  ) ) \s* /x
+    optional = /(\[\s* = \s*  (?:  <[a-z_][-a-z_]*>  |  [A-Z_]+  ) \] ) \s* /x
+    @param = ReExtra[Regexp.new(
+      '\A' + [required.source,optional.source].join('|'), Regexp::EXTENDED
+    )]
+    @param.names=[:required, :optional]
+    class << self
+      extend Lingual
+      def parse str
+        names, reqs, opts, short, long, noable, caps = [],[],[],[],[], nil,nil
+        str.split(/, */).each do |syn|
+          failed(str.inspect) unless caps = @short_long.parse(syn)
+          names.push(caps.short || caps.long)
+          long.push "--#{caps.long}" if caps.long
+          short.push "-#{caps.short}" if caps.short
+          if caps.no
+            failed("i dunno can u say no multiple times?") if noable
+            noable = caps.no
+            this = "#{caps.no}#{caps.long}"
+            long.push "--#{this}"
+            names.push this
+          end
+          if caps = @param.parse(syn)
+            (caps.required ? reqs : opts).push(caps.required || caps.optional)
+          end
+          failed("don't know how to parse: #{syn.inspect}") unless syn.empty?
+        end
+        failed("can't have both required and optional arguments: "<<
+          str.inspect) if reqs.any? && opts.any?
+        arg_names = opts | reqs
+        failed("let's not take arguments with no- style opts") if
+          noable && arg_names.any?
+        failed("spell the argument the same way each time: "<<
+          oxford_comma(arg_names)) if arg_names.length > 1
+        new(names, opts.any? || reqs.any?,
+          reqs.any?, opts.any?, arg_names.first, short, long, noable)
+      end
+    private
+      def failed msg
+        fail("parse parse fail: bad option syntax syntax: #{msg}")
+      end
+    end # class << self
+    def syntax_token
+      if noable
+        "[--[#{noable}]#{names.first}]"
+      else
+        '['+[(long + short).join(','), arg_name].compact.join('')+']'
+      end
+    end
+  private
   end
 end

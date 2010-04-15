@@ -451,4 +451,46 @@ module OptparseLite::Test
       assert_no_diff(exp, act)
     end
   end
+
+
+  describe OptparseLite::OptParser do
+    it "must fail on no mames param" do
+      e = assert_raises(RuntimeError) do
+        OptparseLite::OptParser.new{
+          opt '--[no-]mames[=<joai>]'
+        }.compile!
+      end
+      assert_match(/let's not take arguments with no- style opts/,e.message)
+    end
+  end
+
+
+  class Finally
+    include OptparseLite
+
+    opts {
+      opt '-a, --alpha', 'desco', :foo
+      opt '-b, --beta=<foo>', 'desc2'
+      opt '--gamma[=<baz>]'
+      opt '--[no-]mames', :juae
+    }
+    def do_it opts, a, b=nil
+
+    end
+  end
+  Finally.spec.invocation_name = "finally-app.rb"
+
+  describe Finally do
+    it 'finally-app.rb must work' do
+      exp = <<-HERE.noindent
+        \e[32;mUsage:\e[0m finally-app.rb (do-it) [<opts>] [<args>]
+
+        \e[32;mCommands:\e[0m
+          do-it    usage: do-it [--alpha,-a] [--beta,-b=<foo>] [--gamma[=<baz>]] [--[no-]mames] <arg1> [<arg2>]
+        type -h after a command or subcommand name for more help
+      HERE
+      act = _run{ run [] }.strip
+      assert_no_diff(exp, act)
+    end
+  end
 end
