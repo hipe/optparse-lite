@@ -192,7 +192,7 @@ module Hipe::GenTest
       end
       if items.size == 0
         @ui.puts("coudn't find any items matching \"#{name}\" in list.  "<<
-          "please see -items for items of available items"
+          "please see -list for list of available items"
         )
         return
       end

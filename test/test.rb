@@ -368,18 +368,86 @@ module OptparseLite::Test
 
   class CovPatch
     include OptparseLite
+
     usage '[-blah -blah] <blah1> <blah2>'
     def wierd_usage
+    end
+
+    usage '-one -opt -another [<args>]'
+    def useless_interpolate a1, a2
     end
   end
   CovPatch.spec.invocation_name = "cov-patch-app.rb"
 
   describe CovPatch do
+
     it 'cov-patch-app.rb displays wierd usage (no validation!?)' do # @todo
       exp = <<-HERE.noindent
         \e[32;mUsage: \e[0m cov-patch-app.rb wierd-usage [-blah -blah] <blah1> <blah2>
       HERE
       act = _run{ run ["-h", "wierd-"] }.strip
+      assert_no_diff(exp, act)
+    end
+
+
+    it 'cov-patch-app.rb interpolates args for no reason' do
+      exp = <<-HERE.noindent
+        \e[32;mUsage: \e[0m cov-patch-app.rb useless-interpolate -one -opt -another <arg1> <arg2>
+      HERE
+      act = _run{ run ["-h", "use"] }.strip
+      assert_no_diff(exp, act)
+    end
+  end
+
+
+
+  class OptsMock
+    include OptparseLite::OptsLike
+    def initialize mat
+      @matrix = mat
+    end
+    def doc_matrix
+      @matrix
+    end
+    def syntax_tokens
+      @matrix.select{|x| x[0]}.compact.map{|x| "[#{x}]"}
+    end
+  end
+
+  class BannerTime
+    include OptparseLite
+
+    opts OptsMock.new([
+      [nil, nil, 'Eric Banner:'],
+      ['--foo, -Bar', 'some opt desc'],
+      ['-foobric', 'another'],
+      [nil,nil, 'multiline description that is'],
+      [nil,nil,'not a banner:'],
+      ['--stanley','foobric'],
+      [nil,nil,'this is desc'],
+      [nil,nil,'This is banner:'],
+      ['-a,-b','bloofis goofis'],
+    ])
+    def fix_desc opts, a, b=nil
+    end
+  end
+  BannerTime.spec.invocation_name = "banner-time-app.rb"
+
+  describe BannerTime do
+    it 'banner-time-app.rb must work' do
+      exp = <<-HERE.noindent
+        \e[32;mUsage: \e[0m banner-time-app.rb fix-desc [--foo, -Barsome opt desc] [-foobricanother] [--stanleyfoobric] [-a,-bbloofis goofis] <arg1> [<arg2>]
+        \e[32;mEric Banner:\e[0m
+          --foo, -Bar    some opt desc
+             -foobric    another
+        multiline description that is
+        not a banner:
+            --stanley    foobric
+        this is desc
+        \e[32;mThis is banner:\e[0m
+                -a,-b    bloofis goofis
+      HERE
+      act = _run{ run ["-h", "fix"] }.strip
       assert_no_diff(exp, act)
     end
   end

@@ -29,7 +29,6 @@ private
       @opt_indexes = opts || []
       @syntax_sexp = nil
       @usage = usage || []
-      @usage_parse = nil
     end
     attr_reader :desc, :usage, :method_name
     def desc_oneline
@@ -58,10 +57,16 @@ private
       # @todo: note that when it doesn't parse '[<opts>]' in the usage string
       # then all opts are treated as args here. so this (for now) should only
       # be used for presentation stuff (of course we could etc...)
-      return args_sexp_from_arity if %w([<args>] <args>).include?(str)
-      return [:args, *str.split(' ')] # yup that's what i said
+      if /\A\s*([^\s]+(?:\s+[^\s]+)*)?\s*(?:\[<args>\]|<args>)\s*\Z/x =~ str
+        args = args_sexp_children_from_arity || []
+        opts = $1 ? $1.split(' ') : []
+      else
+        args = str.split(' ') # and of course this breaks on nested things
+        opts = []
+      end
+      (both = opts + args).empty? ? nil : [:args, *both]
     end
-    def args_sexp_from_arity
+    def args_sexp_children_from_arity
       arity = unbound_method.arity
       return nil if arity.zero?
       arity -= (arity > 0 ? 1 : -1) if opts.any?
@@ -69,7 +74,7 @@ private
       if arity < 0
         args.last.replace("[#{args.last}]") # too bad we can't etc
       end
-      [:args, *args]
+      args
     end
     def cmds_sexp
       [:cmds, pretty_full] # @todo later
@@ -81,8 +86,6 @@ private
     end
     def unbound_method
       @spec.unbound_method method_name
-    end
-    def usage_parse
     end
   end
   class Description < Array
@@ -131,6 +134,9 @@ private
     def help_requested?(argv)
       ['-h','--help','-?','help'].include? argv[0]
     end
+    def looks_like_header? line
+      /\A[A-Z0-9][A-Za-z]*(?:\s[A-Za-z0-9]*)*:\s*\Z/ =~ line
+    end
     def hdr(str); "\e[32;m#{str}\e[0m" end
     def txt(str); str end
     def cmd(str); str end # @todo change to underline
@@ -176,10 +182,6 @@ private
       lines = @spec.app_description.get_desc_lines
       @ui.puts lines.map{|line| "#{@margin_a}#{line}"}
     end
-    # def app_usage
-    #   @ui.puts "#{hdr 'Usage:'} #{@spec.invocation_name} "<<
-    #     "<command> [<opts>] [<args>]"
-    # end
     def app_usage_expanded
       if @spec.base_commands.empty?
         @ui.puts("#{hdr 'Usage:'} #{@spec.invocation_name}"<<
@@ -225,9 +227,6 @@ private
     def list_commands cmds
       width = cmds.map{|c| c.pretty.length}.max
       cmds.each do |c|
-        require 'ruby-debug'
-        # debugger;
-        # c.pretty
         cmd_desc = c.desc_oneline
         cmd_desc ||= 'usage: '+stylize(c.syntax_sexp)
         @ui.puts "#{@margin_a}%-#{width}s#{@margin_b}#{cmd_desc}" % [c.pretty]
@@ -241,7 +240,7 @@ private
       @ui.puts hdr('Options:') unless matrix.first[2]
       width = matrix.map{|x| x[0] ? x[0].length : nil }.compact.max
       matrix.each do |row|
-        @ui.puts hdr(row[2]) if row[2]
+        @ui.puts(looks_like_header?(row[2]) ? hdr(row[2]) : row[2]) if row[2]
         if row[0] || row[1]
           @ui.puts "#{@margin_a}%#{width}s#{@margin_b}%s" % [row[0], row[1]]
         end
