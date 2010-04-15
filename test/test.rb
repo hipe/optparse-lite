@@ -59,7 +59,7 @@ module OptparseLite::Test
         \e[32;mUsage:\e[0m one-meth-app.rb (bar) [<opts>] [<args>]
 
         \e[32;mCommands:\e[0m
-          bar          usage: bar
+          bar    usage: bar
         type -h after a command or subcommand name for more help
       HERE
       act = _run{ run ["-h"] }.strip
@@ -72,7 +72,7 @@ module OptparseLite::Test
         \e[32;mUsage:\e[0m one-meth-app.rb (bar) [<opts>] [<args>]
 
         \e[32;mCommands:\e[0m
-          bar          usage: bar
+          bar    usage: bar
         type -h after a command or subcommand name for more help
       HERE
       act = _run{ run [] }.strip
@@ -164,7 +164,7 @@ module OptparseLite::Test
         \e[32;mUsage:\e[0m one-meth-with-neg-arity-app.rb (bar) [<opts>] [<args>]
 
         \e[32;mCommands:\e[0m
-          bar          usage: bar [<arg1>]
+          bar    usage: bar [<arg1>]
         type -h after a command or subcommand name for more help
       HERE
       act = _run{ run [] }.strip
@@ -185,7 +185,7 @@ module OptparseLite::Test
         \e[32;mUsage:\e[0m one-meth-with-pos-arity-app.rb (bar) [<opts>] [<args>]
 
         \e[32;mCommands:\e[0m
-          bar          usage: bar <arg1>
+          bar    usage: bar <arg1>
         type -h after a command or subcommand name for more help
       HERE
       act = _run{ run [] }.strip
@@ -211,7 +211,7 @@ module OptparseLite::Test
           when u wanna have a good time
 
         \e[32;mCommands:\e[0m
-          bar          this is for barring
+          bar    this is for barring
         type -h after a command or subcommand name for more help
       HERE
       act = _run{ run [] }.strip
@@ -240,7 +240,7 @@ module OptparseLite::Test
         \e[32;mUsage:\e[0m one-meth-usage-app.rb (bar) [<opts>] [<args>]
 
         \e[32;mCommands:\e[0m
-          bar          usage: bar <paint> <ball>
+          bar    usage: bar <paint> <ball>
         type -h after a command or subcommand name for more help
       HERE
       act = _run{ run [] }.strip
@@ -266,9 +266,9 @@ module OptparseLite::Test
         \e[32;mUsage:\e[0m three-meth-app.rb (foo|bar|faz) [<opts>] [<args>]
 
         \e[32;mCommands:\e[0m
-          foo          usage: foo
-          bar          usage: bar <arg1> <arg2>
-          faz          faz line one
+          foo    usage: foo
+          bar    usage: bar <arg1> <arg2>
+          faz    faz line one
         type -h after a command or subcommand name for more help
       HERE
       act = _run{ run [] }.strip
@@ -347,7 +347,7 @@ module OptparseLite::Test
         \e[32;mUsage:\e[0m cmd-with-opts-app.rb (foo) [<opts>] [<args>]
 
         \e[32;mCommands:\e[0m
-          foo          usage: foo [--fake] [-b=<foo>]
+          foo    usage: foo [--fake] [-b=<foo>]
         type -h after a command or subcommand name for more help
       HERE
       act = _run{ run [] }.strip

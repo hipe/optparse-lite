@@ -228,8 +228,7 @@ private
       @ui.puts "try #{code(@spec.invocation_name + ' -h')} for help."
     end
     def list_commands cmds
-      width = cmds.map{|c| c.pretty.length}.max +
-        @margin_a.length + @margin_b.length
+      width = cmds.map{|c| c.pretty.length}.max
       cmds.each do |c|
         cmd_desc = c.desc_oneline
         cmd_desc ||= 'usage: '+stylize(command_syntax_sexp(c))
