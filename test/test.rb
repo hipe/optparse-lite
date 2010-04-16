@@ -521,13 +521,59 @@ module OptparseLite::Test
       exp_err = <<-HERE.noindent
         finally-app.rb: couldn't do-it because of the following errors:
         \e[32;m--beta\e[0m requires a parameter (-b=<foo>)
-        i don't recognize the parameter \e[32;m--not\e[0m
+        i don't recognize the parameter: \e[32;m--not\e[0m
         \e[32;m--alpha\e[0m does not take an arguement (\"yo\")
-        try \e[32;m--help\e[0m for syntax and usage.
+        try \e[32;mfinally-app.rb\e[0m \e[32;mhelp\e[0m \e[32;mdo-it\e[0m for syntax and usage.
       HERE
-      act_out, act_err = _run2{ run ["do", "--not=an option", "--beta", "--alpha=yo", "--no-mames"] }
-      assert_no_diff(exp_out, act_out, 'out should be ok')
-      assert_no_diff(exp_err, act_err, 'err should be ok')
+      act_out, act_err = _run2{ run ["do", "--not=an", "option", "--beta", "--alpha=yo", "--no-mames"] }
+      assert_no_diff(exp_out, act_out)
+      assert_no_diff(exp_err, act_err)
+    end
+  end
+
+  class Raiser
+    include OptparseLite
+
+    def arg_error
+      raise ArgumentError.new("this is an application-level arg error")
+    end
+
+    def rt_error
+      raise RuntimeError.new("this is an application-level runtime error")
+    end
+
+    def ui_level_error arg1, arg2
+    end
+  end
+  Raiser.spec.invocation_name = "raiser-app.rb"
+
+  describe Raiser do
+
+    it 'lets application level argument errors thru' do
+      e = assert_raises(ArgumentError) do
+        Raiser.run(%w(arg_error))
+      end
+      assert_match %r!arg error!, e.message
+    end
+
+    it 'lets application level runtime errors thru' do
+      e = assert_raises(RuntimeError) do
+        Raiser.run(%w(rt_error))
+      end
+      assert_match %!runtime error!, e.message
+    end
+
+    it 'rescues argument errors to the controller methods' do
+      exp_out = <<-HERE.noindent
+      HERE
+      exp_err = <<-HERE.noindent
+        raiser-app.rb: couldn't ui-level-error because of an error:
+        wrong number of arguments (0 for 2)
+        try \e[32;mraiser-app.rb\e[0m \e[32;mhelp\e[0m \e[32;mui-level-error\e[0m for syntax and usage.
+      HERE
+      act_out, act_err = _run2{ run ["ui-"] }
+      assert_no_diff(exp_out, act_out)
+      assert_no_diff(exp_err, act_err)
     end
   end
 end

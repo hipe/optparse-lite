@@ -35,8 +35,9 @@ private
     def desc_oneline
       desc.any? ? desc.first_desc_line : nil
     end
-    def one_of_ours exception
-      false # later for this
+    # hack to see where the exception orignated
+    def one_of_ours e
+      e.backtrace.first.index(__FILE__)
     end
     def opts
       @opt_indexes.map{|x| @desc[x]}
@@ -45,9 +46,12 @@ private
       ui = @disp.ui
       ui.err.puts "#{prefix}couldn't #{cmd(pretty)} because of "<<
         Np.new(proc{|b| b ? 'the following' : 'an'},'error',
-          resp.errors.size)
-      ui.err.puts resp.errors
-      ui.err.puts "try #{code('--help')} for syntax and usage."
+          resp.size)
+      ui.err.puts resp
+      ui.err.puts(
+        "try #{code(@spec.invocation_name)} #{code('help')} #{code(pretty_full)} "<<
+        "for syntax and usage."
+      )
       return -1
     end
     def run disp, argv
@@ -63,8 +67,7 @@ private
         resp = disp.impl.send(method_name, *argv)
       rescue ArgumentError => e
         if one_of_ours(e)
-          disp.ui.err.puts e.message
-          return -1
+          return process_opt_parse_errors [e.message]
         else
           raise e
         end
@@ -788,7 +791,7 @@ module OptparseLite
       oxford_comma(list) if list
     end
     def surface_root
-      many? ? "#{@root}s:" : @root
+      many? ? "#{@root}s:" : "#{@root}:"  # colons will be annoying
     end
   end
 end

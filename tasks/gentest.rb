@@ -135,7 +135,7 @@ private
 
   def go_act mod, args
     return go_act2(mod, args) if @both
-    @ui.puts("act = _run{ run #{args.inspect} }.strip")
+    @ui.puts("act = _run{ run #{args.inspect} }")
     @ui.puts('assert_no_diff(exp, act)')
   end
 
