@@ -27,12 +27,25 @@ module OptparseLite
       def _run app=nil, &b
         app ||= guess_app
         app.ui.push
-        app.instance_eval(&b)
-        str = app.ui.pop.to_str
+        _ = app.instance_eval(&b)
+        str = app.ui.pop.to_str # tacitly assumes stderr is empty, breaks else
         $stdout.puts "\n\n#{str}\n" if Test.verbose
         str
       end
-      module_function :_run
+
+      def _run2 app=nil, &b
+        app ||= guess_app
+        app.ui.push
+        _ = app.instance_eval(&b)
+        out, err = app.ui.pop(true)
+        out, err = out.to_s, err.to_s
+        if Test.verbose
+          $stdout.puts "\n\nout:\n#{out}\n."
+          $stdout.puts "\n\nerr:\n#{out}\n."
+        end
+        [out, err]
+      end
+
       def guess_app
         /^OptparseliteTest(.+)Spec/ =~ self.class.to_s
         silly_cache[$1.downcase]

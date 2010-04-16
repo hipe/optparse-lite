@@ -1,4 +1,3 @@
-require 'ruby-debug'
 require 'diff/lcs'
 
 module MiniTest
@@ -32,11 +31,13 @@ module MiniTest
             use_exp = exp
             use_act = act
           end
-          diff = Diff::LCS.diff(use_exp, use_act, :context=>3)
+          diff = Diff::LCS.diff(use_exp, use_act)
           if diff.empty?
             debugger; 'x' # @todo
           else
-            differ.diff_to_str(diff)
+            differ.arr1 = use_exp
+            differ.arr2 = use_act # awful
+            differ.diff_to_str(diff, :context=>3)
           end
         end
       end
@@ -97,6 +98,7 @@ class DiffToString
     @separator_line = '---'
     @trailing_whitespace_style = nil
   end
+  attr_accessor :arr1, :arr2 # this is awful bleeding
   def context= mixed
     fail("no #{mixed.inspect}") unless mixed.kind_of?(Fixnum) && mixed >= 0
     @context = mixed == 0 ? nil : mixed
@@ -117,11 +119,8 @@ class DiffToString
   end
   def arrays_diff arr1, arr2, opts={}
     diff = Diff::LCS.diff(arr1, arr2)
-    gitlike! if opts[:colors]
-    if opts[:context]
-      self.context = opts[:context]
-      @arr1, @arr2 = arr1, arr2
-    end
+    @arr1, @arr2 = arr1, arr2
+    consume_opts_for_diff(opts)
     diff_to_str diff, opts
   end
   def diff mixed1, mixed2, opts={}
@@ -146,6 +145,7 @@ class DiffToString
     str.split(sep, -1)
   end
   def diff_to_str diff, opts
+    consume_opts_for_diff opts
     @out = StringIO.new
     @offset_offset = -1
     diff.each do |chunk|
@@ -190,6 +190,15 @@ class DiffToString
     @out.read
   end
 private
+  def consume_opts_for_diff opts
+    if opts[:colors]
+      opts.delete[:colors]
+      gitlike!
+    end
+    if opts[:context]
+      self.context = opts.delete(:context)
+    end
+  end
   def context_pre chunk
     pos = chunk.first.position - 1
     puts_range_safe pos - @context, pos

@@ -16,6 +16,7 @@ module OptparseLite
     def run_enabled?; @run_enabled end
   end
 private
+  # forward declarations (as everything is in alphabetical order):
   module Lingual
   end
   module HelpHelper
@@ -30,15 +31,45 @@ private
       @syntax_sexp = nil
       @usage = usage || []
     end
-    attr_reader :desc, :usage, :method_name
+    attr_reader :desc, :usage, :method_name, :spec
     def desc_oneline
       desc.any? ? desc.first_desc_line : nil
+    end
+    def one_of_ours exception
+      false # later for this
     end
     def opts
       @opt_indexes.map{|x| @desc[x]}
     end
-    def run implementor, argv
-      implementor.send(method_name, *argv)
+    def process_opt_parse_errors resp
+      ui = @disp.ui
+      ui.err.puts "#{prefix}couldn't #{cmd(pretty)} because of "<<
+        Np.new(proc{|b| b ? 'the following' : 'an'},'error',
+          resp.errors.size)
+      ui.err.puts resp.errors
+      ui.err.puts "try #{code('--help')} for syntax and usage."
+      return -1
+    end
+    def run disp, argv
+      @disp = disp
+      opts = nil
+      if parser = get_parser
+        resp, opts = parser.parse(argv)
+        return process_opt_parse_errors(resp) if resp.errors.any?
+      end
+      args.unshift(opts) if opts
+      resp = nil
+      begin
+        resp = disp.impl.send(method_name, *argv)
+      rescue ArgumentError => e
+        if one_of_ours(e)
+          disp.ui.err.puts e.message
+          return -1
+        else
+          raise e
+        end
+      end
+      resp
     end
     def pretty
       method_name.gsub(/_/,'-') # @todo
@@ -78,6 +109,16 @@ private
     end
     def cmds_sexp
       [:cmds, pretty_full] # @todo later
+    end
+    def exception_category e
+      :foo
+    end
+    def get_parser
+      case opts.size
+      when 0; nil
+      when 1; opts.first
+      else OptParseAggregate.new(opts)
+      end
     end
     def opts_sexp match
       return nil if @opt_indexes.empty? # no matter what u don't take options
@@ -119,11 +160,13 @@ private
       @ui = ui
       @help = Help.new(@spec, @ui)
     end
+    # commands need some or all of these
+    attr_reader :impl, :spec, :ui, :help
     def run argv
       return @help.no_args         if argv.empty?
       return @help.requested(argv) if help_requested?(argv)
       if cmd = @help.find_one_loudly(argv.shift)
-        cmd.run(@impl, argv)
+        cmd.run(self, argv)
       else
         -1 # kind of silly but whatever
       end
@@ -138,6 +181,7 @@ private
       /\A[A-Z0-9][A-Za-z]*(?:\s[A-Za-z0-9]*)*:\s*\Z/ =~ line
     end
     def hdr(str); "\e[32;m#{str}\e[0m" end
+    def prefix; "#{spec.invocation_name}: " end
     def txt(str); str end
     def cmd(str); str end # @todo change to underline
     alias_method :code, :hdr
@@ -425,15 +469,18 @@ private
       define_method(meth){|*a| @out.send(meth,*a) }
     end
 
-    def push io=Sio.new
+    def push out=Sio.new, err=Sio.new
       @stack ||= []
-      @stack.push @out
-      @out = io
+      @stack.push [@out, @err]
+      @out, @err = out, err
     end
-    def pop
-      ret = @out
-      @out = @stack.pop
-      ret
+
+    def pop both=false
+      ret = [@out, @err]
+      @out, @err = @stack.pop
+      return ret if both
+      return ret[0] if ret[1].respond_to?(:to_str) && ''==ret[1].to_str
+      ret # ick. tries to pretend there is only one out stream when possible
     end
   end
 end
@@ -460,7 +507,13 @@ module OptparseLite
       end
     end
   end
+  module OptHelper
+    def dashes key # hack, could be done in spec instead somehow
+      key.length == 1 ? "-#{key}" : "--#{key}"
+    end
+  end
   class OptParser
+    include OptHelper
     def initialize(&block)
       @block = block
       @compiled = false
@@ -473,6 +526,7 @@ module OptparseLite
       @compiled = true
     end
     def doc_matrix
+      compile! unless @compiled
       matrix = []
       @items.each do |item|
         if OptSpec===item
@@ -483,6 +537,11 @@ module OptparseLite
         end
       end
       matrix
+    end
+    def parse argv
+      opts = parse_argv argv
+      resp = validate_and_populate(opts)
+      [resp, opts]
     end
     def specs
       compile! unless @compiled
@@ -510,6 +569,118 @@ module OptparseLite
       end
       @specs.push @items.size
       @items.push spec
+    end
+    def parse_argv argv
+      options = []; not_opts = []
+      argv.each{ |x| (x =~ /^-/ ? options : not_opts).push(x) }
+      opts = Hash[* options.map do |flag|
+        key,value = flag.match(/\A([^=]+)(?:=(.*))?\Z/).captures
+        [key.sub(/^--?/, ''), value.nil? ? true : value ]
+      end.flatten]
+      argv.replace not_opts
+      opts
+    end
+    # @return [Response], alter opts
+    # this does the following: for all unrecognized opts, add one error
+    # (one error encompases all of them), populate defaults, normalize
+    # them either to the accessor or last long or last short surface form
+    # with a symbol key (maybe), make sure that opts that don't take parameter
+    # don't have them and opts that require them do.
+    def validate_and_populate opts
+      resp = Response.new
+      sing = class << opts; self end
+      specs = self.specs
+      opts.keys.each do |key|
+        val = opts.delete(key) # easier just to do this always
+        if ! @names.key?(key)
+          resp.unrecognized_parameter(key, val)
+        else
+          spec = specs[@names[key]]
+          if spec.required? && val == true
+            resp.required_argument_missing(spec, key)
+          elsif val != true && ! spec.takes_argument?
+            resp.argument_not_allowed(spec, key, val)
+          else  # if resp.valid? (aggregate parses.. @todo)
+            opts[spec.normalized_key] = val
+            if spec.accessor
+              acc = spec.accessor
+              sing.send(:define_method, spec.accessor){ self[acc] }
+            end
+          end
+        end
+      end
+      if resp.valid?
+        do_these_defaults =
+        specs.map{|s| s.has_default? ? s.normalized_key : nil }.compact -
+          opts.keys
+        do_these_defaults.each do |key|
+          opts[key] = spec.get_default
+        end
+      end
+      resp
+    end
+    class Response < Array
+      include OptHelper, HelpHelper
+      def initialize
+        @memoish = {}
+      end
+      def argument_not_allowed spec, key, val
+        push Error.new(:argument_not_allowed,
+         code(dashes(key))<<" does not take an arguement (#{val.inspect})",
+         :norm_key => spec.normalized_key)
+      end
+      def errors; self  end
+      def required_argument_missing spec, key
+        push Error.new(:required_argument_missing,
+          code(dashes(key))<<" requires a parameter ("<<
+          "#{spec.cannonical_name})",
+          :norm_key => spec.normalized_key)
+      end
+      def unrecognized_parameter key, value
+        memoish(:unrec_param){ UnrecognizedParameters.new }[key] = value
+      end
+      def valid?; empty? end
+    private
+      def memoish(name, &block)
+        return self[@memoish[name]] if @memoish.key? name
+        @memoish[name] = size
+        push block.call
+        last
+      end
+    end
+    module Error;
+      attr_accessor :error_type
+      class << self
+        def [](mixed)
+          mixed.extend(self)
+        end
+        def new error_type, message, opts={}
+          ret = self[message.dup]
+          ret.error_init error_type, opts
+          ret
+        end
+      end
+      def error_init error_type, opts
+        @error_type = error_type
+        opts.each do |(k,v)|
+          instance_variable_set("@#{k}", v)
+          def!(k){instance_variable_get("@#{k}")}
+        end
+      end
+    private
+      def def! name, &block
+        class << self; self end.send(:define_method, name, &block)
+      end
+    end
+    class UnrecognizedParameters < Hash
+      include Error, OptHelper, HelpHelper
+      def initialize
+        @type = :unrecognized_parameters
+      end
+      def to_s
+        "i don't recognize "<<
+          Np.new(:this, 'parameter'){|| keys.map{|x| code(dashes(x)) }}
+      end
     end
   end
   class OptSpec < Struct.new(:names, :takes_argument, :required,
@@ -566,6 +737,12 @@ module OptparseLite
         fail("parse parse fail: bad option syntax syntax: #{msg}")
       end
     end # class << self
+    def cannonical_name
+      syntax_tokens.last
+    end
+    def normalized_key
+      accessor ? accessor.to_sym : names.last.to_sym
+    end
     def syntax_tokens
       if noable
         ["--[#{noable}]#{names.first}"]
@@ -576,5 +753,44 @@ module OptparseLite
       end
     end
   private
+  end
+  class Np
+    # Noun Phrase. silly cute extraneous way to do plurals
+    # this was toned down from previous versions, can be expanded
+    # it is half mock now
+    include Lingual
+    class << self
+      alias_method :[], :new
+    end
+    def initialize art, root, count=nil, &block
+      fail('blah blah for now') if block_given? && ! block.arity.zero?
+      fail('count and block mutually exclusive, one required') unless
+        1 == [count, block].compact.size
+      @art, @root, @block, @count, @list = art, root, block, count, nil
+    end
+    def to_str
+      [ surface_article,
+        surface_root,
+        surface_items ].compact.join(' ')
+    end
+    alias_method :to_s, :to_str
+  private
+    def list
+      @block and @list ||= @block.call
+    end
+    def many?
+      @count ||= list.size
+      @count != 1
+    end
+    def surface_article
+      @art.kind_of?(Proc) ? @art.call(many?) :
+        many? ? 'these' : 'the'
+    end
+    def surface_items
+      oxford_comma(list) if list
+    end
+    def surface_root
+      many? ? "#{@root}s:" : @root
+    end
   end
 end

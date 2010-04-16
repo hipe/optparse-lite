@@ -27,17 +27,19 @@ module Hipe::GenTest
   extend self
 
   def gentest argv
+    @both = false
+    process_opts(argv) if /^-/ =~ argv.first
     @service_controller = deduce_service_controller
     @ui = Hipe::IndentingStream.new($stdout,'')
     argv = argv.dup
     file = argv.shift
     mod = deduce_module_from_file file
     mod.spec.invocation_name = File.basename(file)
-    act = run(mod){ run argv }
+    get_actuals mod, argv
     @ui.indent!.indent!
     go_app(mod, file)
     go_desc(mod, file) do
-      go_exp(act)
+      go_exp
       go_act(mod, argv)
     end
     exit(0) # rake is annoying
@@ -90,6 +92,14 @@ private
     mod
   end
 
+  def get_actuals mod, argv
+    if @both
+      @act_out, @act_err = run2(mod){ run argv }
+    else
+      @act = run(mod){ run argv }
+    end
+  end
+
   def go_desc(mod, file)
     @ui.puts "describe #{mod} do"
     @ui.indent!.puts("it '#{File.basename(file)} must work' do").indent!
@@ -124,8 +134,15 @@ private
   end
 
   def go_act mod, args
+    return go_act2(mod, args) if @both
     @ui.puts("act = _run{ run #{args.inspect} }.strip")
     @ui.puts('assert_no_diff(exp, act)')
+  end
+
+  def go_act2 mod, args
+    @ui.puts("act_out, act_err = _run2{ run #{args.inspect} }")
+    @ui.puts('assert_no_diff(exp_out, act_out)')
+    @ui.puts('assert_no_diff(exp_err, act_err)')
   end
 
   def go_app mod, file
@@ -135,10 +152,26 @@ private
     @ui.puts
   end
 
-  def go_exp act
+  def go_exp
+    return go_exp2 if @both
+    act = @act
     @ui.puts('exp = <<-HERE.noindent')
     @ui.indent!
     @ui.puts act.to_s.inspect.gsub('\n',"\n").gsub(/(\A"| *"\Z)/,'')
+    @ui.dedent!
+    @ui.puts 'HERE'
+  end
+
+  def go_exp2
+    act_out, act_err = @act_out, @act_err
+    @ui.puts('exp_out = <<-HERE.noindent')
+    @ui.indent!
+    @ui.puts act_out.to_s.inspect.gsub('\n',"\n").gsub(/(\A"| *"\Z)/,'')
+    @ui.dedent!
+    @ui.puts 'HERE'
+    @ui.puts('exp_err = <<-HERE.noindent')
+    @ui.indent!
+    @ui.puts act_err.to_s.inspect.gsub('\n',"\n").gsub(/(\A"| *"\Z)/,'')
     @ui.dedent!
     @ui.puts 'HERE'
   end
@@ -147,10 +180,24 @@ private
     File.basename(str).match(/^(.*)\.rb$/)[1]
   end
 
+  def process_opts argv
+    fail("expecting '--out=2', not #{argv.first}") unless
+      /^--out=2$/ =~ argv.first
+    @both = true
+    argv.shift
+    nil
+  end
+
   def run mod, &block
     mod.ui.push
     _ = mod.instance_eval(&block)
     mod.ui.pop
+  end
+
+  def run2 mod, &block
+    mod.ui.push
+    _ = mod.instance_eval(&block)
+    mod.ui.pop(true)
   end
 end
 

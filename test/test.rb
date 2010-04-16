@@ -514,5 +514,22 @@ module OptparseLite::Test
       act = _run{ run ["-h", "do"] }.strip
       assert_no_diff(exp, act)
     end
+
+    it 'finally-app.rb complains on optparse errors' do
+      exp_out = <<-HERE.noindent
+      HERE
+      exp_err = <<-HERE.noindent
+        finally-app.rb: couldn't do-it because of the following errors:
+        \e[32;m--beta\e[0m requires a parameter (-b=<foo>)
+        i don't recognize the parameter \e[32;m--not\e[0m
+        \e[32;m--alpha\e[0m does not take an arguement (\"yo\")
+        try \e[32;m--help\e[0m for syntax and usage.
+      HERE
+      act_out, act_err = _run2{ run ["do", "--not=an option", "--beta", "--alpha=yo", "--no-mames"] }
+      act_out.strip!
+      act_err.strip!
+      assert_no_diff(exp_out, act_out, 'out should be ok')
+      assert_no_diff(exp_err, act_err, 'err should be ok')
+    end
   end
 end
