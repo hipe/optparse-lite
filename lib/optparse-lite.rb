@@ -277,16 +277,14 @@ private
       end
     end
     def list_options cmd
-      matrix = []
-      cmd.opts.each do |parser|
-        matrix.concat parser.doc_matrix
-      end
+      matrix = cmd.opts.map(&:doc_matrix).flatten(1)
       @ui.puts hdr('Options:') unless matrix.first[2]
-      width = matrix.map{|x| x[0] ? x[0].length : nil }.compact.max
+      width = matrix.map{|x| x[0] && x[0].length }.compact.max
       matrix.each do |row|
         @ui.puts(looks_like_header?(row[2]) ? hdr(row[2]) : row[2]) if row[2]
         if row[0] || row[1]
-          @ui.puts "#{@margin_a}%#{width}s#{@margin_b}%s" % [row[0], row[1]]
+          @ui.puts "#{@margin_a}%#{width}s%s" %
+            [row[0], row[1] && "#{@margin_b}#{row[1]}"] # no trailing w/s
         end
       end
     end

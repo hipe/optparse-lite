@@ -8,7 +8,6 @@ class String
   def noindent n=nil
     n ||= /\A *(?! )/.match(self)[0].length
     s = gsub(/^ {#{n}}/, '')
-    s.gsub!(/\n\Z/,'') # remove one trailing newline, b/c this is so common
     s
   end
 end
