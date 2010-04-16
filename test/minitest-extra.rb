@@ -1,3 +1,4 @@
+require 'ruby-debug'
 require 'diff/lcs'
 
 module MiniTest
@@ -31,7 +32,7 @@ module MiniTest
             use_exp = exp
             use_act = act
           end
-          diff = Diff::LCS.diff(use_exp, use_act)
+          diff = Diff::LCS.diff(use_exp, use_act, :context=>3)
           if diff.empty?
             debugger; 'x' # @todo
           else
@@ -79,7 +80,7 @@ class DiffToString
 
   class << self
     # these are just convenience wrappers for instance methods
-    %w(files_diff strings_diff gitlike!).each do |meth|
+    %w(diff files_diff strings_diff gitlike!).each do |meth|
       define_method(meth){|*a| new.send(meth,*a) }
     end
   end
@@ -87,6 +88,7 @@ class DiffToString
     @add_style = nil
     @add_header    = '%sa%s'
     @change_header = '%sc%s'
+    @context       = nil
     @del_header    = '%sd%s'
     @del_style = nil
     @left  = '<'
@@ -94,6 +96,10 @@ class DiffToString
     @right = '>'
     @separator_line = '---'
     @trailing_whitespace_style = nil
+  end
+  def context= mixed
+    fail("no #{mixed.inspect}") unless mixed.kind_of?(Fixnum) && mixed >= 0
+    @context = mixed == 0 ? nil : mixed
   end
   def gitlike!
     common_header = '@@ -%s, +%s @@'
@@ -109,27 +115,41 @@ class DiffToString
     @trailing_whitespace_style = [:red_bg]
     self
   end
+  def arrays_diff arr1, arr2, opts={}
+    diff = Diff::LCS.diff(arr1, arr2)
+    gitlike! if opts[:colors]
+    if opts[:context]
+      self.context = opts[:context]
+      @arr1, @arr2 = arr1, arr2
+    end
+    diff_to_str diff, opts
+  end
+  def diff mixed1, mixed2, opts={}
+    case (x=[mixed1.class, mixed2.class])
+    when [Array,Array];   arrays_diff(mixed1,mixed2,opts)
+    when [String,String]; strings_diff(mixed1,mixed2,opts)
+    else "no diff strategy for #{x.inspect}"
+    end
+  end
   def files_diff a, b, opts={:sep=>"\n"}
     str1 = File.read(a)
     str2 = File.read(b)
     strings_diff(str1, str2, opts)
   end
-  def strings_diff a, b, opts={:sep=>"\n"}
+  def strings_diff a, b, opts={}
+    opts = opts.merge(:sep=>"\n")
     arr1 = str_to_arr a, opts[:sep]
     arr2 = str_to_arr b, opts[:sep]
-    arrays_diff(arr1, arr2)
-  end
-  def arrays_diff arr1, arr2
-    diff = Diff::LCS.diff(arr1, arr2)
-    diff_to_str diff
+    arrays_diff(arr1, arr2, opts)
   end
   def str_to_arr str, sep
     str.split(sep, -1)
   end
-  def diff_to_str diff
+  def diff_to_str diff, opts
     @out = StringIO.new
     @offset_offset = -1
     diff.each do |chunk|
+      context_pre(chunk) if @context
       dels = []
       adds = []
       start_add = last_add = start_del = last_del = nil
@@ -164,11 +184,20 @@ class DiffToString
       adds.each do |add|
         puts_add "#{@right} #{add}"
       end
+      context_post(chunk) if @context
     end
     @out.rewind
     @out.read
   end
 private
+  def context_pre chunk
+    pos = chunk.first.position - 1
+    puts_range_safe pos - @context, pos
+  end
+  def context_post chunk
+    pos = chunk.last.position + 1
+    puts_range_safe pos, pos + @context
+  end
   def other_offset start
     start + @offset_offset
   end
@@ -207,6 +236,19 @@ private
     str =  @del_header % [range(start_del,last_del), other_offset(start_del)]
     @out.puts(stylize(str, @header_style))
   end
+  def puts_range_safe start, final
+    start = [start, 0].max
+    final = [@arr1.size-1, final].min
+    if @last_range
+      start = [@last_range[1]+1, start].max
+      # assume sequential for now! no need to check about previous
+      # ones in front of us
+    end
+    return if start >= final
+    @last_range = [start, final]
+    @out.puts @arr1[start..final].map{|x| "  #{x}"}
+    # @todo i don't know if i'm reading the chunks right
+  end
   def puts_sep
     if @separator_line
       @out.puts(@separator_line)
@@ -219,4 +261,28 @@ private
       "#{min},#{max}"
     end
   end
+end
+
+if __FILE__ == $PROGRAM_NAME
+require 'test/unit'
+require 'test/unit/ui/console/testrunner'
+class DiffToString::TestCase < Test::Unit::TestCase
+  def test_context
+    before = <<-B
+      alpha
+      beta
+      gamma
+      tau
+    B
+    after = <<-A
+      alpha
+      gamma
+      zeta
+      tau
+    A
+    puts DiffToString.diff(before.split("\n"), after.split("\n"),
+      :colors=>1, :context=>3)
+    end
+end
+Test::Unit::UI::Console::TestRunner.run(DiffToString::TestCase)
 end
