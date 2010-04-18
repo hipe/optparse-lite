@@ -601,6 +601,9 @@ module OptparseLite::Test
       opt '-d, --delta'
     }
     def go_with_it opts, a, b=nil
+      opts = opts.merge(:first_arg=>a, :second_arg=>b)
+      resp = opts.keys.map(&:to_s).sort.map{|k| [k.to_sym, opts[k.to_sym]]}
+      ui.puts resp.inspect
     end
   end
   AggOpts.spec.invocation_name = "agg-opts-app.rb"
@@ -635,6 +638,14 @@ module OptparseLite::Test
       act_out, act_err = _run2{ run ["go", "--digle=fingle,", "--gamma,", "--alpha=foo"] }
       assert_no_diff(exp_out, act_out)
       assert_no_diff(exp_err, act_err)
+    end
+
+    it 'agg-opts-app.rb must work' do
+      exp = <<-HERE.noindent
+        [[:b, \"heh but it's argless\"], [:first_arg, \"foo\"], [:gamma, \"great gams\"], [:second_arg, nil]]
+      HERE
+      act = _run{ run ["go", "foo"] }
+      assert_no_diff(exp, act)
     end
   end
 end

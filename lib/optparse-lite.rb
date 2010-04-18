@@ -720,7 +720,7 @@ module OptparseLite
     def parse args
       errors, opts = @parsers.first.parse(args)
       @parsers[1..-1].each do |parser|
-        unparsed = errors.delete(:unparsed_parameters) or break
+        unparsed = errors.delete(:unparsed_parameters) || {}
         errors.concat parser.validate_and_populate(unparsed)
         opts.merge! unparsed
       end
