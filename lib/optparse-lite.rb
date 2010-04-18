@@ -141,9 +141,6 @@ private
     def any?
       detect{|x| x.kind_of?(String) || x.kind_of?(DocBlock)}
     end
-    def get_desc_lines
-      select{|x| x.kind_of?(String) || x.kind_of?(DocBlock)}
-    end
     def first_desc_line
       if (one = any?)
         one.kind_of?(String) ? one : one.first_desc_line
@@ -186,9 +183,9 @@ private
     alias_method :code, :hdr
   private
     def common_doc_sexp items, txt_type=:txt
-      items.map{ |x| x.respond_to?(:doc_sexp) ? x.doc_sexp :
+      these = items.map{ |x| x.respond_to?(:doc_sexp) ? x.doc_sexp :
         looks_like_header?(x) ? [[:hdr, x]] : [[txt_type, x]]
-      }.flatten(1)
+      }; these.flatten(1)
     end
   end
   class Help
@@ -645,18 +642,6 @@ module OptparseLite
       def initialize
         @memoish = {}
       end
-      def [] sym
-        return super(sym) unless sym.kind_of?(Symbol)
-        res = all(sym)
-        case res.size
-        when 0; nil
-        when 1; res[0]
-        else fail("Multiple results for #{sym.inspect}")
-        end
-      end
-      def all sym
-        all_indexes(sym).map{|x| self[x]}
-      end
       def all_indexes sym
         each_with_index.map{|(v,i)| v.error_type == sym ? i : nil }.compact
       end
@@ -670,7 +655,6 @@ module OptparseLite
         case idxs.size
         when 0; nil
         when 1; delete_at(idxs.first)
-        else; fail("Multiple results for #{sym.inspect}")
         end
       end
       def errors; self  end
