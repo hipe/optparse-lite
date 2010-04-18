@@ -585,4 +585,56 @@ module OptparseLite::Test
       assert_match %r!count and block mutually exclusive!, e.message
     end
   end
+
+  class AggOpts
+    include OptparseLite
+    opts {
+      banner 'Alpha Options:'
+      opt '-a, --alpha', 'this is alpha'
+      opt '-b', 'this is beta', :default=>'heh but it\'s argless'
+    }
+    desc "you will see this at the top above the opts? or not"
+    opts {
+      banner 'Gamma Options:'
+      opt '-g, --gamma=<foo>', 'this is gamma',
+        'multiline gamma', :default=>'great gams'
+      opt '-d, --delta'
+    }
+    def go_with_it opts, a, b=nil
+    end
+  end
+  AggOpts.spec.invocation_name = "agg-opts-app.rb"
+
+  describe AggOpts do
+    it 'agg-opts-app.rb help display' do
+      exp = <<-HERE.noindent
+        \e[32;mUsage:\e[0m agg-opts-app.rb go-with-it [--alpha,-a] [-b] [--gamma,-g=<foo>] [--delta,-d] <arg1> [<arg2>]
+        \e[32;mAlpha Options:\e[0m
+                --alpha, -a    this is alpha
+                         -b    this is beta
+          you will see this at the top above the opts? or not
+        \e[32;mGamma Options:\e[0m
+          --gamma, -g=<foo>    this is gamma
+                               multiline gamma
+                --delta, -d
+      HERE
+      act = _run{ run ["-h", "go"] }
+      assert_no_diff(exp, act)
+    end
+
+    it 'agg-opts-app.rb opt validation' do
+      exp_out = <<-HERE.noindent
+      HERE
+      exp_err = <<-HERE.noindent
+        agg-opts-app.rb: couldn't go-with-it because of the following errors:
+        \e[32;m--alpha\e[0m does not take an arguement (\"foo\")
+        i don't recognize these parameters: \e[32;m--gamma,\e[0m and \e[32;m--digle\e[0m
+        \e[32;mUsage:\e[0m agg-opts-app.rb go-with-it [--alpha,-a] [-b] [--gamma,-g=<foo>] [--delta,-d] <arg1> [<arg2>]
+        try \e[32;magg-opts-app.rb\e[0m \e[32;mhelp\e[0m \e[32;mgo-with-it\e[0m for full syntax and usage.
+      HERE
+      act_out, act_err = _run2{ run ["go", "--digle=fingle,", "--gamma,", "--alpha=foo"] }
+      assert_no_diff(exp_out, act_out)
+      assert_no_diff(exp_err, act_err)
+    end
+  end
 end
