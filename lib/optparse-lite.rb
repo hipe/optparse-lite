@@ -1,3 +1,4 @@
+require 'singleton'
 module OptparseLite
   @run_enabled = true
   class << self
@@ -35,23 +36,20 @@ private
     def desc_oneline
       desc.any? ? desc.first_desc_line : nil
     end
-    # hack to see where the exception orignated
-    def one_of_ours e
-      e.backtrace.first.index(__FILE__)
+    def doc_sexp
+      common_doc_sexp @desc, :bdy
     end
     def opts
       @opt_indexes.map{|x| @desc[x]}
     end
-    def process_opt_parse_errors resp
-      ui = @disp.ui
-      ui.err.puts "#{prefix}couldn't #{cmd(pretty)} because of "<<
-        Np.new(proc{|b| b ? 'the following' : 'an'},'error',
-          resp.size)
-      ui.err.puts resp
-      ui.err.puts(
-        "try #{code(@spec.invocation_name)} #{code('help')} #{code(pretty_full)} "<<
-        "for syntax and usage."
-      )
+    def process_opt_parse_errors resp, opts={}
+      opts = {opts=>true} if opts.kind_of?(Symbol)
+      ui = @disp.ui.err
+      ui.puts "#{prefix}couldn't #{cmd(pretty)} because of "<<
+        Np.new(proc{|b| b ? 'the following' : 'an'},'error',resp.size)
+      ui.puts resp
+      @disp.help.command_usage self, ui if opts[:show_usage]
+      @disp.help.invite_to_more_command_help_specific self, ui
       return -1
     end
     def run disp, argv
@@ -59,15 +57,15 @@ private
       opts = nil
       if parser = get_parser
         resp, opts = parser.parse(argv)
-        return process_opt_parse_errors(resp) if resp.errors.any?
+        return process_opt_parse_errors(resp, :show_usage) if resp.errors.any?
       end
-      args.unshift(opts) if opts
+      argv.unshift(opts) if opts
       resp = nil
       begin
         resp = disp.impl.send(method_name, *argv)
       rescue ArgumentError => e
         if one_of_ours(e)
-          return process_opt_parse_errors [e.message]
+          return process_opt_parse_errors [e.message], :show_usage
         else
           raise e
         end
@@ -113,15 +111,16 @@ private
     def cmds_sexp
       [:cmds, pretty_full] # @todo later
     end
-    def exception_category e
-      :foo
-    end
     def get_parser
       case opts.size
       when 0; nil
       when 1; opts.first
-      else OptParseAggregate.new(opts)
+      else OptParserAggregate.new(opts)
       end
+    end
+    # hack to see where the exception orignated
+    def one_of_ours e
+      e.backtrace.first.index(__FILE__)
     end
     def opts_sexp match
       return nil if @opt_indexes.empty? # no matter what u don't take options
@@ -139,14 +138,11 @@ private
     end
   end
   class DescriptionAndOpts < Array
-    def initialize arr
-      super(arr)
+    def any?
+      detect{|x| x.kind_of?(String) || x.kind_of?(DocBlock)}
     end
     def get_desc_lines
       select{|x| x.kind_of?(String) || x.kind_of?(DocBlock)}
-    end
-    def any?
-      detect{|x| x.kind_of?(String) || x.kind_of?(DocBlock)}
     end
     def first_desc_line
       if (one = any?)
@@ -188,6 +184,12 @@ private
     def txt(str); str end
     def cmd(str); str end # @todo change to underline
     alias_method :code, :hdr
+  private
+    def common_doc_sexp items, txt_type=:txt
+      items.map{ |x| x.respond_to?(:doc_sexp) ? x.doc_sexp :
+        looks_like_header?(x) ? [[:hdr, x]] : [[txt_type, x]]
+      }.flatten(1)
+    end
   end
   class Help
     include Lingual, HelpHelper
@@ -196,6 +198,11 @@ private
       @margin_b = '    '
       @spec = spec
       @ui = ui
+    end
+    def command_usage cmd, ui=@ui
+      sexp = cmd.syntax_sexp.dup # b/c of unshift below
+      sexp.unshift([:cmds, @spec.invocation_name])
+      ui.puts hdr('Usage:')+'  '+stylize_syntax(sexp) # @todo fix
     end
     def find_one_loudly cmd
       all = @spec.find_all cmd
@@ -212,6 +219,10 @@ private
         invite_to_more_help
         nil
       end
+    end
+    def invite_to_more_command_help_specific cmd, ui=@ui
+      ui.puts("try #{code(@spec.invocation_name)} #{code('help')} "<<
+        "#{code(cmd.pretty_full)} for full syntax and usage.")
     end
     def requested argv
       return command_help_full(argv[1], argv[2..-2]) if argv.size > 1
@@ -230,13 +241,11 @@ private
       @ui.puts lines.map{|line| "#{@margin_a}#{line}"}
     end
     def app_usage_expanded
+      @ui.print("#{hdr 'Usage:'} #{@spec.invocation_name}")
       if @spec.base_commands.empty?
-        @ui.puts("#{hdr 'Usage:'} #{@spec.invocation_name}"<<
-          " (this screen. no commands defined.)"
-        )
+        @ui.puts(" (this screen. no commands defined.)")
       else
-        @ui.puts("#{hdr 'Usage:'} #{@spec.invocation_name} ("<<
-          @spec.base_commands.map{|c| c.pretty }*'|'<<
+        @ui.puts(' ('<<@spec.base_commands.map{|c| c.pretty }*'|'<<
           ') [<opts>] [<args>]'
         )
       end
@@ -247,25 +256,18 @@ private
         command_help_full_actual found, rest
       end
     end
-    def command_help_full_actual cmd, rest
+    def command_help_full_actual cmd, _
       command_usage cmd
-      if cmd.desc.any?
-        @ui.print hdr('Description:')
-        lines = cmd.desc.get_desc_lines
-        if lines.size == 1
-          @ui.puts "  #{lines.first}"
-        else
-          @ui.puts "\n" << lines.map{|x| "#{@margin_a}#{x}"} * "\n"
+      sexp = cmd.doc_sexp.dup
+      if sexp.any?
+        case sexp.first.first
+        when :opt;        sexp.unshift([:hdr, 'Options:'])
+        when :bdy, :txt;  sexp.unshift([:hdr, 'Description:'])
         end
       end
-      list_options(cmd) if cmd.opts.any?
+      stylize_docblock sexp, @ui
     end
-    def command_usage cmd
-      sexp = cmd.syntax_sexp.dup # b/c of unshift below
-      sexp.unshift([:cmds, @spec.invocation_name])
-      @ui.puts hdr("Usage: ")+' '+stylize(sexp) # @todo fix
-    end
-    def invite_to_more_command_help
+    def invite_to_more_command_help_general
       @ui.puts "type -h after a command or subcommand name for more help"
     end
     def invite_to_more_help
@@ -275,20 +277,8 @@ private
       width = cmds.map{|c| c.pretty.length}.max
       cmds.each do |c|
         cmd_desc = c.desc_oneline
-        cmd_desc ||= 'usage: '+stylize(c.syntax_sexp)
+        cmd_desc ||= 'usage: '+stylize_syntax(c.syntax_sexp)
         @ui.puts "#{@margin_a}%-#{width}s#{@margin_b}#{cmd_desc}" % [c.pretty]
-      end
-    end
-    def list_options cmd
-      matrix = cmd.opts.map(&:doc_matrix).flatten(1)
-      @ui.puts hdr('Options:') unless matrix.first[2]
-      width = matrix.map{|x| x[0] && x[0].length }.compact.max
-      matrix.each do |row|
-        @ui.puts(looks_like_header?(row[2]) ? hdr(row[2]) : row[2]) if row[2]
-        if row[0] || row[1]
-          @ui.puts "#{@margin_a}%#{width}s%s" %
-            [row[0], row[1] && "#{@margin_b}#{row[1]}"] # no trailing w/s
-        end
       end
     end
     def list_base_commands
@@ -297,9 +287,51 @@ private
       @ui.puts
       @ui.puts "#{hdr 'Commands:'}"
       list_commands cmds
-      invite_to_more_command_help
+      invite_to_more_command_help_general
     end
-    def stylize sexp
+    class SexpWrapper # hack so you can access .first on nil nodes
+      class NilSexpClass; include Singleton; def first; nil end end
+      NilSexp = NilSexpClass.instance
+      def initialize(sexp); @sexp = sexp end
+      def each_with_index(*a, &b); @sexp.each_with_index(*a, &b); end
+      def [](idx); it = @sexp[idx] and it or NilSexp; end
+    end
+    def stylize_docblock sexp, ui=@ui
+      matrix = stylize_docblock_first_pass sexp
+      width = matrix.map{|x|(Array===x&&x[0])?x[0].length : nil}.compact.max
+      matrix.each do |row|
+        case row
+        when String; ui.puts row
+        when Array;
+          ui.print "#{@margin_a}%#{width}s" % row[0] # should be ok on nil
+          ui.puts row[1] ? "#{@margin_b}#{row[1]}" : "\n"
+        end
+      end
+    end
+    def stylize_docblock_first_pass sexp
+      idx, last = 0, sexp.size-1
+      sexp = SexpWrapper.new(sexp)
+      matrix = [] # two-pass rendering to line up columns
+      while idx <= last
+        node = sexp[idx]
+        case node.first
+        when :hdr
+          matrix.push hdr(node[1])
+          if sexp[idx+1].first == :bdy && sexp[idx+2].first != :bdy
+            matrix.last.concat " #{sexp[idx+1][1]}"
+            idx += 1 # special case: only one line of txt on same line as hdr
+          end
+        when :bdy; matrix.push "#{@margin_a}#{node[1]}"
+        when :txt; matrix.push node[1]
+        when :opt
+          matrix.push [node[1], node[2]]  # multiline opt docs:
+          matrix.concat node[3..-1].map{|x| [nil, x]} if node[3]
+        end
+        idx += 1
+      end
+      matrix
+    end
+    def stylize_syntax sexp
       parts = []
       sexp.each do |node|      # non-empty children else xtra spaces
         case node.first
@@ -324,7 +356,7 @@ private
     end
   end
   module OptsLike
-    # syntax_tokens, doc_matrix
+    # syntax_tokens
   end
   module OptsBlock
     include OptsLike
@@ -332,7 +364,7 @@ private
   module ServiceClass
     def init_service_class
       @instance ||= nil
-      @spec = Spec.new(self)
+      @spec = AppSpec.new(self)
       @ui = Ui.new
     end
     attr_reader :ui, :spec
@@ -378,7 +410,7 @@ private
     def to_str; idx = tell; rewind; str = read; seek(idx); str end
     alias_method :to_s, :to_str
   end
-  class Spec
+  class AppSpec
     include Lingual
     def initialize mod
       @app_description = Description.new
@@ -481,7 +513,7 @@ private
       @out, @err = @stack.pop
       return ret if both
       return ret[0] if ret[1].respond_to?(:to_str) && ''==ret[1].to_str
-      ret # ick. tries to pretend there is only one out stream when possible
+      # ret # ick. tries to pretend there is only one out stream when possible
     end
   end
 end
@@ -514,7 +546,7 @@ module OptparseLite
     end
   end
   class OptParser
-    include OptHelper
+    include OptHelper, HelpHelper
     def initialize(&block)
       @block = block
       @compiled = false
@@ -526,18 +558,9 @@ module OptparseLite
       instance_eval(&@block)
       @compiled = true
     end
-    def doc_matrix
+    def doc_sexp
       compile! unless @compiled
-      matrix = []
-      @items.each do |item|
-        if OptSpec===item
-          matrix.push [item.syntax_tokens*', ', item.desc.first]
-          matrix.concat(item.desc[1..-1].map{|x| [nil,x]}) if item.desc.size>1
-        else
-          matrix.push [nil,nil,item]
-        end
-      end
-      matrix
+      common_doc_sexp @items
     end
     def parse argv
       opts = parse_argv argv
@@ -551,36 +574,6 @@ module OptparseLite
     def syntax_tokens
       specs.map{|x| x.syntax_tokens * ','}
     end
-  private
-    def banner str
-      @items.push str
-    end
-    def opt syntax, *extra
-      spec = OptSpec.parse(syntax)
-      opts = extra.last.kind_of?(Hash) ? extra.pop : {}
-      unless opts[:accessor]
-        idxs = extra.each_with_index.map{|(m,i)| Symbol===m ? i : nil}.compact
-        fail("can't have more than one symbol in definition") if idxs.size > 1
-        opts[:accessor] = extra.slice!(idxs.first) if idxs.any?
-      end
-      spec.desc = extra
-      spec.names.each do |name|
-        fail("won't redefine existing opt name \"#{name}\"") if @names[name]
-        @names[name] = @specs.size
-      end
-      @specs.push @items.size
-      @items.push spec
-    end
-    def parse_argv argv
-      options = []; not_opts = []
-      argv.each{ |x| (x =~ /^-/ ? options : not_opts).push(x) }
-      opts = Hash[* options.map do |flag|
-        key,value = flag.match(/\A([^=]+)(?:=(.*))?\Z/).captures
-        [key.sub(/^--?/, ''), value.nil? ? true : value ]
-      end.flatten]
-      argv.replace not_opts
-      opts
-    end
     # @return [Response], alter opts
     # this does the following: for all unrecognized opts, add one error
     # (one error encompases all of them), populate defaults, normalize
@@ -588,6 +581,7 @@ module OptparseLite
     # with a symbol key (maybe), make sure that opts that don't take parameter
     # don't have them and opts that require them do.
     def validate_and_populate opts
+      compile! unless @compiled
       resp = Response.new
       sing = class << opts; self end
       specs = self.specs
@@ -610,25 +604,74 @@ module OptparseLite
           end
         end
       end
-      if resp.valid?
-        do_these_defaults =
-        specs.map{|s| s.has_default? ? s.normalized_key : nil }.compact -
-          opts.keys
-        do_these_defaults.each do |key|
-          opts[key] = spec.get_default
-        end
-      end
+      these = specs.map{|s| s.has_default? ? s.normalized_key : nil }.compact
+      employ = these - opts.keys
+      employ.each{|k| opts[k]=specs.detect{|s| s.normalized_key == k}.default}
       resp
+    end
+  private
+    def banner str
+      @items.push str
+    end
+    def opt syntax, *extra
+      spec = OptSpec.parse(syntax)
+      opts = extra.last.kind_of?(Hash) ? extra.pop : {}
+      unless opts[:accessor]
+        idxs = extra.each_with_index.map{|(m,i)| Symbol===m ? i : nil}.compact
+        fail("can't have more than one symbol in definition") if idxs.size > 1
+        opts[:accessor] = extra.slice!(idxs.first) if idxs.any?
+      end
+      spec.default = opts[:default] if opts.key?(:default)
+      spec.desc = extra
+      spec.names.each do |name|
+        fail("won't redefine existing opt name \"#{name}\"") if @names[name]
+        @names[name] = @specs.size
+      end
+      @specs.push @items.size
+      @items.push spec
+    end
+    def parse_argv argv
+      options = []; not_opts = []
+      argv.each{ |x| (x =~ /^-/ ? options : not_opts).push(x) }
+      opts = Hash[* options.map do |flag|
+        key,value = flag.match(/\A([^=]+)(?:=(.*))?\Z/).captures
+        [key.sub(/^--?/, ''), value.nil? ? true : value ]
+      end.flatten]
+      argv.replace not_opts
+      opts
     end
     class Response < Array
       include OptHelper, HelpHelper
       def initialize
         @memoish = {}
       end
+      def [] sym
+        return super(sym) unless sym.kind_of?(Symbol)
+        res = all(sym)
+        case res.size
+        when 0; nil
+        when 1; res[0]
+        else fail("Multiple results for #{sym.inspect}")
+        end
+      end
+      def all sym
+        all_indexes(sym).map{|x| self[x]}
+      end
+      def all_indexes sym
+        each_with_index.map{|(v,i)| v.error_type == sym ? i : nil }.compact
+      end
       def argument_not_allowed spec, key, val
         push Error.new(:argument_not_allowed,
          code(dashes(key))<<" does not take an arguement (#{val.inspect})",
          :norm_key => spec.normalized_key)
+      end
+      def delete sym
+        idxs = all_indexes(sym)
+        case idxs.size
+        when 0; nil
+        when 1; delete_at(idxs.first)
+        else; fail("Multiple results for #{sym.inspect}")
+        end
       end
       def errors; self  end
       def required_argument_missing spec, key
@@ -638,7 +681,7 @@ module OptparseLite
           :norm_key => spec.normalized_key)
       end
       def unrecognized_parameter key, value
-        memoish(:unrec_param){ UnrecognizedParameters.new }[key] = value
+        memoish(:unrec_param){ UnparsedParamters.new }[key] = value
       end
       def valid?; empty? end
     private
@@ -673,10 +716,10 @@ module OptparseLite
         class << self; self end.send(:define_method, name, &block)
       end
     end
-    class UnrecognizedParameters < Hash
+    class UnparsedParamters < Hash
       include Error, OptHelper, HelpHelper
       def initialize
-        @type = :unrecognized_parameters
+        @error_type = :unparsed_parameters
       end
       def to_s
         "i don't recognize "<<
@@ -684,8 +727,24 @@ module OptparseLite
       end
     end
   end
+  # we take this opportunity to discover our interface for parsers:
+  # parse()
+  class OptParserAggregate
+    def initialize parsers
+      @parsers = parsers
+    end
+    def parse args
+      errors, opts = @parsers.first.parse(args)
+      @parsers[1..-1].each do |parser|
+        unparsed = errors.delete(:unparsed_parameters) or break
+        errors.concat parser.validate_and_populate(unparsed)
+        opts.merge! unparsed
+      end
+      [errors, opts]
+    end
+  end
   class OptSpec < Struct.new(:names, :takes_argument, :required,
-    :optional, :arg_name, :short, :long, :noable, :desc, :accessor)
+    :optional, :arg_name, :short, :long, :noable, :desc, :accessor, :default)
     alias_method :required?, :required
     alias_method :optional?, :optional
     alias_method :takes_argument?, :takes_argument
@@ -740,6 +799,12 @@ module OptparseLite
     end # class << self
     def cannonical_name
       syntax_tokens.last
+    end
+    def doc_sexp
+      [[:opt, syntax_tokens*', ', * desc]]
+    end
+    def has_default?
+      ! default.nil? # whatever. i don't care about nil defaults
     end
     def normalized_key
       accessor ? accessor.to_sym : names.last.to_sym

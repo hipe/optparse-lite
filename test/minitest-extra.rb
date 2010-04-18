@@ -92,6 +92,7 @@ class DiffToString
     @context       = nil
     @del_header    = '%sd%s'
     @del_style = nil
+    @last_range = nil
     @left  = '<'
     @line_no_style = nil
     @right = '>'
