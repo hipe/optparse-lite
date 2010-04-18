@@ -202,7 +202,7 @@ private
     def command_usage cmd, ui=@ui
       sexp = cmd.syntax_sexp.dup # b/c of unshift below
       sexp.unshift([:cmds, @spec.invocation_name])
-      ui.puts hdr('Usage:')+'  '+stylize_syntax(sexp) # @todo fix
+      ui.puts hdr('Usage:')+' '+stylize_syntax(sexp)
     end
     def find_one_loudly cmd
       all = @spec.find_all cmd

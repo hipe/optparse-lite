@@ -92,7 +92,7 @@ module OptparseLite::Test
 
     it 'one-meth-app.rb ask for help partial match must work' do
       exp = <<-HERE.noindent
-        \e[32;mUsage:\e[0m  one-meth-app.rb bar
+        \e[32;mUsage:\e[0m one-meth-app.rb bar
       HERE
       act = _run{ run ["-h", "b"] }
       assert_no_diff(exp, act)
@@ -101,7 +101,7 @@ module OptparseLite::Test
 
     it 'one-meth-app.rb ask for help full match must work' do
       exp = <<-HERE.noindent
-        \e[32;mUsage:\e[0m  one-meth-app.rb bar
+        \e[32;mUsage:\e[0m one-meth-app.rb bar
       HERE
       act = _run{ run ["-h", "bar"] }
       assert_no_diff(exp, act)
@@ -219,7 +219,7 @@ module OptparseLite::Test
     end
     it 'one-meth-desc-app.rb ask for help must work' do
       exp = <<-HERE.noindent
-        \e[32;mUsage:\e[0m  one-meth-desc-app.rb bar
+        \e[32;mUsage:\e[0m one-meth-desc-app.rb bar
         \e[32;mDescription:\e[0m this is for barring
       HERE
       act = _run{ run ["-h", "bar"] }
@@ -295,7 +295,7 @@ module OptparseLite::Test
 
     it 'three-meth-app.rb help requestsed on command with desc must work' do
       exp = <<-HERE.noindent
-        \e[32;mUsage:\e[0m  three-meth-app.rb faz
+        \e[32;mUsage:\e[0m three-meth-app.rb faz
         \e[32;mDescription:\e[0m
           faz line one
           faz line two
@@ -353,7 +353,7 @@ module OptparseLite::Test
     end
     it 'cmd-with-opts-app.rb multiline description stub' do
       exp = <<-HERE.noindent
-        \e[32;mUsage:\e[0m  cmd-with-opts-app.rb foo [--fake] [-b=<foo>]
+        \e[32;mUsage:\e[0m cmd-with-opts-app.rb foo [--fake] [-b=<foo>]
         \e[32;mAwesome Opts:\e[0m
               -h,--hey    awesome desc
           -H,--HO=<ho>    awesome desc2
@@ -381,7 +381,7 @@ module OptparseLite::Test
 
     it 'cov-patch-app.rb displays wierd usage (no validation!?)' do # @todo
       exp = <<-HERE.noindent
-        \e[32;mUsage:\e[0m  cov-patch-app.rb wierd-usage [-blah -blah] <blah1> <blah2>
+        \e[32;mUsage:\e[0m cov-patch-app.rb wierd-usage [-blah -blah] <blah1> <blah2>
       HERE
       act = _run{ run ["-h", "wierd-"] }
       assert_no_diff(exp, act)
@@ -390,7 +390,7 @@ module OptparseLite::Test
 
     it 'cov-patch-app.rb interpolates args for no reason' do
       exp = <<-HERE.noindent
-        \e[32;mUsage:\e[0m  cov-patch-app.rb useless-interpolate -one -opt -another <arg1> <arg2>
+        \e[32;mUsage:\e[0m cov-patch-app.rb useless-interpolate -one -opt -another <arg1> <arg2>
       HERE
       act = _run{ run ["-h", "use"] }
       assert_no_diff(exp, act)
@@ -430,7 +430,7 @@ module OptparseLite::Test
   describe BannerTime do
     it 'banner-time-app.rb must work' do
       exp = <<-HERE.noindent
-        \e[32;mUsage:\e[0m  banner-time-app.rb fix-desc [--foo, -Bar] [-foobric] [--stanley] [-a,-b] <arg1> [<arg2>]
+        \e[32;mUsage:\e[0m banner-time-app.rb fix-desc [--foo, -Bar] [-foobric] [--stanley] [-a,-b] <arg1> [<arg2>]
         \e[32;mEric Banner:\e[0m
           --foo, -Bar    some opt desc
              -foobric    another
@@ -494,7 +494,7 @@ module OptparseLite::Test
 
     it 'finally-app.rb command help' do
       exp = <<-HERE.noindent
-        \e[32;mUsage:\e[0m  finally-app.rb do-it [--alpha,-a] [--beta,-b=<foo>] [--gamma[=<baz>]] [--[no-]mames] <arg1> [<arg2>]
+        \e[32;mUsage:\e[0m finally-app.rb do-it [--alpha,-a] [--beta,-b=<foo>] [--gamma[=<baz>]] [--[no-]mames] <arg1> [<arg2>]
         \e[32;mFun Options:\e[0m
                --alpha, -a    desco
           --beta, -b=<foo>    desc for beta
@@ -517,7 +517,7 @@ module OptparseLite::Test
         \e[32;m--beta\e[0m requires a parameter (-b=<foo>)
         i don't recognize the parameter: \e[32;m--not\e[0m
         \e[32;m--alpha\e[0m does not take an arguement (\"yo\")
-        \e[32;mUsage:\e[0m  finally-app.rb do-it [--alpha,-a] [--beta,-b=<foo>] [--gamma[=<baz>]] [--[no-]mames] <arg1> [<arg2>]
+        \e[32;mUsage:\e[0m finally-app.rb do-it [--alpha,-a] [--beta,-b=<foo>] [--gamma[=<baz>]] [--[no-]mames] <arg1> [<arg2>]
         try \e[32;mfinally-app.rb\e[0m \e[32;mhelp\e[0m \e[32;mdo-it\e[0m for full syntax and usage.
       HERE
       act_out, act_err = _run2{ run ["do", "--not=an", "option", "--beta", "--alpha=yo", "--no-mames"] }
@@ -564,7 +564,7 @@ module OptparseLite::Test
       exp_err = <<-HERE.noindent
         raiser-app.rb: couldn't ui-level-error because of an error:
         wrong number of arguments (0 for 2)
-        \e[32;mUsage:\e[0m  raiser-app.rb ui-level-error <arg1> <arg2>
+        \e[32;mUsage:\e[0m raiser-app.rb ui-level-error <arg1> <arg2>
         try \e[32;mraiser-app.rb\e[0m \e[32;mhelp\e[0m \e[32;mui-level-error\e[0m for full syntax and usage.
       HERE
       act_out, act_err = _run2{ run ["ui-"] }
