@@ -1,30 +1,30 @@
 module Hipe
+  class IndentingStream
+    def initialize io, indent
+      @io = io
+      @indent = indent
+    end
+    def indent!
+      @indent << '  '
+      self
+    end
+    def dedent!
+      @indent.sub!(/  $/,'')
+      self
+    end
+    def puts m=nil
+      return @io.puts if m.nil?
+      m = m.split("\n") if m.kind_of? String
+      m = [m] unless m.kind_of? Array
+      @io.puts m.map{|x| "#{@indent}#{x}"}
+      self
+    end
+  end
 end
 
-class Hipe::IndentingStream
-  def initialize io, indent
-    @io = io
-    @indent = indent
-  end
-  def indent!
-    @indent << '  '
-    self
-  end
-  def dedent!
-    @indent.sub!(/  $/,'')
-    self
-  end
-  def puts m=nil
-    return @io.puts if m.nil?
-    m = m.split("\n") if m.kind_of? String
-    m = [m] unless m.kind_of? Array
-    @io.puts m.map{|x| "#{@indent}#{x}"}
-    self
-  end
-end
-
+module Hipe; end
 module Hipe::GenTest
-  extend self
+  extend self # cheap way to get module_function s from everything
 
   def gentest argv
     @both = false

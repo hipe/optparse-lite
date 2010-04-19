@@ -1,7 +1,10 @@
 # require 'rubygems'
 require 'rake/testtask.rb'
 require 'rake/gempackagetask.rb'
-require File.expand_path('../lib/optparse-lite.rb', __FILE__)
+lib = File.expand_path('../lib', __FILE__)
+require lib+'/optparse-lite.rb'
+require lib+'/test/gentest-task.rb'
+require lib+'/test/gentest-task.rb'
 
 task :default => :test
 
@@ -46,3 +49,7 @@ task :hack do
   this_path = File.dirname(__FILE__)
   FileUtils.ln_s(this_path, kill_path, :verbose => 1)
 end
+
+Hipe::GenTest::GenTestTask.new{}
+
+Hipe::GenTest::UnGenTask.new{}

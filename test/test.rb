@@ -1,4 +1,3 @@
-require File.dirname(__FILE__)+'/optparse-lite-test-setup.rb'
 
 module OptparseLite::Test
 
