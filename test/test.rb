@@ -47,7 +47,7 @@ module OptparseLite::Test
     " do
       exp = <<-HERE.noindent
         i don't know how to \e[32;mbazzle\e[0m.
-        try \e[32;mone-meth-app.rb -h\e[0m for help.
+        try \e[32;mone-meth-app.rb\e[0m \e[32;m-h\e[0m for help.
       HERE
       act = _run{ run ["bazzle"] }
       assert_no_diff(exp, act)
@@ -83,7 +83,7 @@ module OptparseLite::Test
     it 'one-meth-app.rb ask for help bad command must work' do
       exp = <<-HERE.noindent
         i don't know how to \e[32;mska\e[0m.
-        try \e[32;mone-meth-app.rb -h\e[0m for help.
+        try \e[32;mone-meth-app.rb\e[0m \e[32;m-h\e[0m for help.
       HERE
       act = _run{ run ["-h", "ska"] }
       assert_no_diff(exp, act)
@@ -278,7 +278,7 @@ module OptparseLite::Test
     it 'three-meth-app.rb help requested command not found must work' do
       exp = <<-HERE.noindent
         i don't know how to \e[32;mska\e[0m.
-        try \e[32;mthree-meth-app.rb -h\e[0m for help.
+        try \e[32;mthree-meth-app.rb\e[0m \e[32;m-h\e[0m for help.
       HERE
       act = _run{ run ["-h", "ska"] }
       assert_no_diff(exp, act)
@@ -287,7 +287,7 @@ module OptparseLite::Test
     it 'three-meth-app.rb help requested partial match must work' do
       exp = <<-HERE.noindent
         did you mean \e[32;mfoo\e[0m or \e[32;mfaz\e[0m?
-        try \e[32;mthree-meth-app.rb -h\e[0m for help.
+        try \e[32;mthree-meth-app.rb\e[0m \e[32;m-h\e[0m for help.
       HERE
       act = _run{ run ["-h", "f"] }
       assert_no_diff(exp, act)
@@ -645,6 +645,71 @@ module OptparseLite::Test
         [[:b, \"heh but it's argless\"], [:first_arg, \"foo\"], [:gamma, \"great gams\"], [:second_arg, nil]]
       HERE
       act = _run{ run ["go", "foo"] }
+      assert_no_diff(exp, act)
+    end
+  end
+
+
+  class Sub
+    include OptparseLite
+
+    subcommands :fric, 'bric-dic', :frac
+    def foo(*a)
+      subcommand_dispatch(*a)
+    end
+
+  private
+
+    usage '[<opts>] <crank-harder>'
+    desc  'crank harder'
+    opts {
+      opt '-f', "this does blah", :accessor=>:f
+    }
+    def foo_fric opts, arg
+      opts.merge!({:arg=>arg, :method=>:foo_fric})
+      puts opts.inspect
+      opts
+    end
+
+    usage '[<opts>] <somefile>'
+    desc  'some awesome times'
+    opts {
+      opt '-b,--blah', "this does blah"
+    }
+    def foo_bric_dic opts, arg
+      opts.merge!({:arg=>arg, :method=>:foo_bric_dic})
+      puts opts.inspect
+      opts
+    end
+
+    def foo_frac
+    end
+  end
+  Sub.spec.invocation_name = "sub-app.rb"
+
+  describe Sub do
+    it 'sub-app.rb with command with no arg shows subcommand list' do
+      exp = <<-HERE.noindent
+        \e[32;mUsage:\e[0m sub-app.rb foo (fric|bric-dic|frac) [<opts>] [<args>]
+
+        \e[32;mSub Commands:\e[0m
+          fric        crank harder
+          bric-dic    some awesome times
+          frac        usage: foo frac
+        type -h after a command or subcommand name for more help
+      HERE
+      act = _run{ run ["foo"] }
+      assert_no_diff(exp, act)
+      act = _run{ run ["foo", "-h"] }
+      assert_no_diff(exp, act)
+    end
+    it 'sub-app.rb shows help on sub-command' do
+      exp = <<-HERE.noindent
+        \e[32;mUsage:\e[0m sub-app.rb foo fric [-f] <crank-harder>
+        \e[32;mDescription:\e[0m crank harder
+          -f    this does blah
+      HERE
+      act = _run{ run ["foo", "-h", "fric"] }
       assert_no_diff(exp, act)
     end
   end

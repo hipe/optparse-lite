@@ -17,21 +17,112 @@ module OptparseLite
     def run_enabled?; @run_enabled end
   end
 private
-  # forward declarations (as everything is in alphabetical order):
-  module Lingual
-  end
-  module HelpHelper
+  # forward declarations (everything is in alphabetical order):
+  module Lingual;    end
+  module HelpHelper; end
+  class AppSpec
+    include Lingual
+    def initialize mod
+      @app_description = Description.new
+      @base_commands = nil
+      @commands = []
+      @names = {}
+      @mod = mod
+      @order = []
+      @desc = @opts = @spec = @subcommands = @usage = nil
+    end
+    attr_reader :app_description
+    def base_commands
+      @base_commands ||=
+        (@order &  @mod.public_instance_methods(false)).map do |meth|
+          get_command(meth)
+        end
+    end
+    def cmd_desc desc
+      @desc ||= []
+      @desc.push desc
+    end
+    def desc mixed
+      @app_description.push mixed
+    end
+    # this is private except for getting subcommand command objects!
+    def get_command meth
+      @names[meth] ? @commands[@names[meth]] : begin
+        @names[meth] = @commands.length
+        cmd = Command.new(self, meth)
+        @commands.push cmd
+        cmd
+      end
+    end
+    def find_all_local local_name
+      meth = methodize(local_name)
+      re = /^#{Regexp.escape(meth)}/
+      command_method_names.grep(re).map do |n|
+        if n == meth
+          return [get_command(n)]
+        else
+          get_command(n)
+        end
+      end
+    end
+    attr_writer :invocation_name
+    def invocation_name
+      @invocation_name ||= File.basename($PROGRAM_NAME)
+    end
+    def method_added_notify meth
+      meth = meth.to_s
+      @order.push meth
+      if @desc || @opts || @usage || @subcommands
+        @names[meth] = @commands.length
+        @commands.push Command.new(self, meth, @desc, @opts, @usage,
+          @subcommands)
+        @desc = @opts = @usage = @subcommands = nil
+      end
+    end
+    def opts mixed=nil, &block
+      @desc ||= []
+      @opts ||= []
+      fail("can't take block and arg") if mixed && block
+      if block
+        mixed = OptParser.new(&block)
+      else
+        fail("opts must be OptsLike") unless mixed.kind_of?(OptsLike)
+      end
+      @opts.push @desc.size
+      @desc.push mixed
+    end
+    def subcommands *a
+      @subcommands ||= []
+      @subcommands.concat a
+    end
+    def unbound_method method_name
+      @mod.instance_method method_name
+    end
+    def usage usage
+      @usage ||= []
+      @usage.push usage
+    end
+  private
+    def command_method_names
+      @order & (
+        @mod.public_instance_methods(false) |
+        @commands.map{|x| x.method_name }
+      )
+    end
   end
   class Command
-    include HelpHelper
-    def initialize spec, method_name, desc=nil, opts=nil, usage=nil
+    include HelpHelper, Lingual
+    def initialize spec, method_name, desc=nil, opts=nil, usage=nil,
+        subcommands=nil
       @spec = spec
       @method_name = method_name
       @desc = DescriptionAndOpts.new(desc || [])
       @opt_indexes = opts || []
+      @subcommand_names = subcommands
       @syntax_sexp = nil
       @usage = usage || []
     end
+    attr_accessor :given_name, :parent # used only for subcommands
     attr_reader :desc, :usage, :method_name, :spec
     def desc_oneline
       desc.any? ? desc.first_desc_line : nil
@@ -73,14 +164,18 @@ private
       resp
     end
     def pretty
-      method_name.gsub(/_/,'-') # @todo
+      given_name ? given_name.to_s : method_name.gsub(/_/,'-')
     end
-    alias_method :pretty_full, :pretty
-    # local, don't look up! (?)
+    def pretty_full
+      parent ? "#{parent.pretty_full} #{pretty}" : pretty
+    end
+    def subcommands
+      @subcommands ||= SubCommands.new(self, @subcommand_names)
+    end
     def syntax_sexp
       return @syntax_sexp unless @syntax_sexp.nil?
       # no support for union grammars yet (or evar!) (like git-branch).
-      usage = @usage.any? ? @usage.join(' ') : '[<opts>] [<args>]'
+      usage = @usage.any? ? @usage.join(' ') : default_usage
       md = (/\A(\[<opts>\] *)?(.*)\Z/m).match(usage) # matches all strings
       @syntax_sexp = [cmds_sexp, opts_sexp(md[1]), args_sexp(md[2])].compact
     end
@@ -89,7 +184,10 @@ private
       # @todo: note that when it doesn't parse '[<opts>]' in the usage string
       # then all opts are treated as args here. so this (for now) should only
       # be used for presentation stuff (of course we could etc...)
-      if /\A\s*([^\s]+(?:\s+[^\s]+)*)?\s*(?:\[<args>\]|<args>)\s*\Z/x =~ str
+      if subcommands.any? && str.index('<subcommand>')
+        return subcommand_sexp str
+      elsif(
+        /\A\s*([^\s]+(?:\s+[^\s]+)*)?\s*(?:\[<args>\]|<args>)\s*\Z/x =~ str)
         args = args_sexp_children_from_arity || []
         opts = $1 ? $1.split(' ') : []
       else
@@ -111,6 +209,10 @@ private
     def cmds_sexp
       [:cmds, pretty_full] # @todo later
     end
+    def default_usage
+      [subcommands.any? ? '<subcommand>': nil, '[<opts>] [<args>]'].compact.
+        join(' ')
+    end
     def get_parser
       case opts.size
       when 0; nil
@@ -118,14 +220,26 @@ private
       else OptParserAggregate.new(opts)
       end
     end
-    # hack to see where the exception orignated
     def one_of_ours e
-      e.backtrace.first.index(__FILE__)
+      e.backtrace.first.index(__FILE__)# hack to see where it orignated
     end
     def opts_sexp match
       return nil if @opt_indexes.empty? # no matter what u don't take options
       return nil if match.nil? # maybe want to have them but not show them?
       [:opts, *opts.map{|o| o.syntax_tokens.map{|x| "[#{x}]"}}.flatten]
+    end
+    def subcommands_init names
+      @subcommand_method_names = names.map do |n|
+        "#{@method_name}_#{methodize(n)}"
+      end
+    end
+    def subcommand_sexp str
+      md = /\A(.*)<subcommand>(.*)\Z/.match(str)
+      [
+        md[1].empty? ? nil : [:txt, md[1]],
+        [:or, *subcommands.map{|x| [:cmds, x.given_name.to_s] }],
+        md[2].empty? ? nil : [:txt, md[2]]
+      ].compact
     end
     def unbound_method
       @spec.unbound_method method_name
@@ -161,7 +275,7 @@ private
     def run argv
       return @help.no_args         if argv.empty?
       return @help.requested(argv) if help_requested?(argv)
-      if cmd = @help.find_one_loudly(argv.shift)
+      if cmd = @help.find_one_loudly(argv.shift, @spec)
         cmd.run(self, argv)
       else
         -1 # kind of silly but whatever
@@ -196,24 +310,33 @@ private
       @spec = spec
       @ui = ui
     end
+    def command_help_full cmd_str, rest
+      if found = find_one_loudly(cmd_str, @spec)
+        if rest.any?
+          command_help_full "#{cmd_str} #{rest.shift}", rest
+        else
+          command_help_full_actual found, rest
+        end
+      end
+    end
     def command_usage cmd, ui=@ui
       sexp = cmd.syntax_sexp.dup # b/c of unshift below
       sexp.unshift([:cmds, @spec.invocation_name])
       ui.puts hdr('Usage:')+' '+stylize_syntax(sexp)
     end
-    def find_one_loudly cmd
-      all = @spec.find_all cmd
+    def find_one_loudly cmd, commands
+      all = commands.find_all_local cmd
       case all.size
       when 0
         @ui.puts "i don't know how to #{code cmd}."
-        invite_to_more_help
+        invite_to_more_help commands
         nil
       when 1
         all.first
       else
         @ui.puts "did you mean " <<
           oxford_comma(all.map{|x| code(x.pretty)}, ' or ') << '?'
-        invite_to_more_help
+        invite_to_more_help commands
         nil
       end
     end
@@ -248,12 +371,7 @@ private
       end
     end
     alias_method :app_usage, :app_usage_expanded
-    def command_help_full cmd, rest
-      if found = find_one_loudly(cmd)
-        command_help_full_actual found, rest
-      end
-    end
-    def command_help_full_actual cmd, _
+    def command_help_full_actual cmd, rest
       command_usage cmd
       sexp = cmd.doc_sexp.dup
       if sexp.any?
@@ -263,12 +381,20 @@ private
         end
       end
       stylize_docblock sexp, @ui
+      if (cmds = cmd.subcommands).any?
+        @ui.puts
+        @ui.puts "#{hdr 'Sub Commands:'}"
+        list_commands cmds
+        invite_to_more_command_help_general
+      end
     end
     def invite_to_more_command_help_general
       @ui.puts "type -h after a command or subcommand name for more help"
     end
-    def invite_to_more_help
-      @ui.puts "try #{code(@spec.invocation_name + ' -h')} for help."
+    def invite_to_more_help cmds=@spec
+      @ui.puts 'try '+ [ code(@spec.invocation_name),
+        cmds.respond_to?(:pretty_full) ? code(cmds.pretty_full) : nil,
+        code('-h')].compact.join(' ') + ' for help.'
     end
     def list_commands cmds
       width = cmds.map{|c| c.pretty.length}.max
@@ -329,15 +455,17 @@ private
       matrix
     end
     def stylize_syntax sexp
-      parts = []
-      sexp.each do |node|      # non-empty children else xtra spaces
-        case node.first
-        when :cmds; parts.push node[1..-1].map{|c| cmd(c)}.join(' ')
-        when :opts; parts.push node[1..-1].join(' ')
-        when :args; parts.push node[1..-1].join(' ')
+      resp =
+      if sexp.first.kind_of? Symbol
+        case sexp.first
+        when :cmds; sexp[1..-1].map{|c| cmd(c)}.join(' ')
+        when :or; '('+sexp[1..-1].map{|x| stylize_syntax(x)}*'|'+')'
+        else sexp[1..-1].join(' ') #  :opts, :args, :txt
         end
+      else
+        sexp.map{|x| stylize_syntax(x)}*' '
       end
-      parts * ' '
+      resp.strip # turn ' <args>' into '<args>'
     end
   end
   module Lingual
@@ -384,6 +512,9 @@ private
       end
       @instance.run argv
     end
+    def subcommands *a
+      @spec.subcommands(*a)
+    end
     def x desc
       @spec.cmd_desc desc
     end
@@ -393,6 +524,7 @@ private
     end
   end
   module ServiceObject
+    include HelpHelper
     def init_service_object spec, ui
       @spec = spec
       @ui = ui
@@ -401,92 +533,44 @@ private
     def run argv
       @dispatcher.run argv
     end
+    def subcommand_dispatch(*a)
+      cmd = @spec.get_command(caller.first.match(/`([^']+)'\Z/)[1])
+      if a.empty? || (help_requested?(a) && a.shift)
+        return @dispatcher.help.command_help_full(cmd.pretty_full, a)
+      end
+      if cmd = @dispatcher.help.find_one_loudly(a.shift, cmd.subcommands)
+        cmd.run @dispatcher, a
+      end
+    end
     attr_accessor :ui; private :ui # avoid warnings
+  end
+  class SubCommands < Array
+    include Lingual
+    def initialize parent_cmd, subcommand_names
+      @command = parent_cmd
+      method_name = parent_cmd.method_name
+      app_spec = parent_cmd.spec
+      arr = subcommand_names.nil? ? [] : subcommand_names.map do |name|
+        cmd = app_spec.get_command "#{method_name}_#{methodize(name)}"
+        cmd.given_name = name
+        cmd.parent = parent_cmd
+        cmd
+      end
+      super(arr)
+    end
+    def pretty_full; @command.pretty_full end
+    def find_all_local local_name
+      re = /^#{Regexp.escape(local_name)}/
+      these = select do |x|
+        return [x] if x.given_name.to_s == local_name
+        re =~ x.given_name.to_s
+      end
+      these
+    end
   end
   class Sio < StringIO
     def to_str; idx = tell; rewind; str = read; seek(idx); str end
     alias_method :to_s, :to_str
-  end
-  class AppSpec
-    include Lingual
-    def initialize mod
-      @app_description = Description.new
-      @base_commands = nil
-      @commands = []
-      @names = {}
-      @mod = mod
-      @order = []
-      @desc = @opts = @spec = @usage = nil
-    end
-    attr_reader :app_description
-    def base_commands
-      @base_commands ||=
-        (@order &  @mod.public_instance_methods(false)).map do |meth|
-          get_command(meth)
-        end
-    end
-    def cmd_desc desc
-      @desc ||= []
-      @desc.push desc
-    end
-    def desc mixed
-      @app_description.push mixed
-    end
-    def find_all name
-      meth = methodize(name)
-      re = /^#{Regexp.escape(meth)}/
-      (@order & (
-        @mod.public_instance_methods(false) |
-        @commands.map{|x| x.method_name }
-      )).grep(re).map do |n|
-        if n == meth
-          return [get_command(n)]
-        else
-          get_command(n)
-        end
-      end
-    end
-    attr_writer :invocation_name
-    def invocation_name
-      @invocation_name ||= File.basename($PROGRAM_NAME)
-    end
-    def method_added_notify meth
-      meth = meth.to_s
-      @order.push meth
-      if @desc || @opts || @usage
-        @names[meth] = @commands.length
-        @commands.push Command.new(self, meth, @desc, @opts, @usage)
-        @desc = @opts = @usage = nil
-      end
-    end
-    def opts mixed=nil, &block
-      @desc ||= []
-      @opts ||= []
-      fail("can't take block and arg") if mixed && block
-      if block
-        mixed = OptParser.new(&block)
-      else
-        fail("opts must be OptsLike") unless mixed.kind_of?(OptsLike)
-      end
-      @opts.push @desc.size
-      @desc.push mixed
-    end
-    def unbound_method method_name
-      @mod.instance_method method_name
-    end
-    def usage usage
-      @usage ||= []
-      @usage.push usage
-    end
-  private
-    def get_command meth
-      @names[meth] ? @commands[@names[meth]] : begin
-        @names[meth] = @commands.length
-        cmd = Command.new(self, meth)
-        @commands.push cmd
-        cmd
-      end
-    end
   end
   class Ui
     def initialize
