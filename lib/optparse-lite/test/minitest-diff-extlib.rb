@@ -1,4 +1,5 @@
 require 'diff/lcs'
+require File.expand_path('../diff-to-string.rb', __FILE__)
 
 module MiniTest
   module Assertions
@@ -33,7 +34,7 @@ module MiniTest
           end
           diff = Diff::LCS.diff(use_exp, use_act)
           if diff.empty?
-            debugger; 'x' # @todo
+            fail("test test fail -- never expecting empty diff here")
           else
             differ.arr1 = use_exp
             differ.arr2 = use_act # awful

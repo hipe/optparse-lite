@@ -1,9 +1,9 @@
 require File.expand_path('../../tasklib.rb', __FILE__)
 
 module Hipe
-  module Gentest
+  module GenTest
     class GenTestTask
-      include Hipe::Gentest::Tasklib
+      include Hipe::GenTest::TaskLib
       def initialize name=:gentest, argv=ARGV
         @argv = argv
         @desc = "gentest -- try it and see!"
@@ -11,21 +11,21 @@ module Hipe
         yield self if block_given?
         define
       end
-      attr_accessor :name, :desc
+      attr_accessor :name
+      attr_writer :desc
     private
       def define
-        task @name do
-          run @argv
-        end
+        desc @desc
+        task(@name){ run @argv }
       end
       def run argv
         require File.expand_path('../../gentest.rb',__FILE__)
-        fail('huh?') unless argv.shift == @name
+        fail('huh?') unless argv.shift == @name.to_s
         use_argv = argv.dup
         argv.clear # don't let rake see (?)
         argv = use_argv
         if argv.empty?
-          puts <<-HERE.gsub(/^      /,'')
+          puts <<-HERE.gsub(/^            /,'')
             #{hdr 'Usage:'} #{cmd 'rake gentest'} -- [--out=2] ./your-app.rb --foo='bar' --baz='jazz'
             #{hdr 'Description:'} output to STDOUT a code snippet fer yer test
             #{hdr 'Options:'}

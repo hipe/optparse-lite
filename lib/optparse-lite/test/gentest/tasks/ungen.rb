@@ -1,9 +1,9 @@
 require File.expand_path('../../tasklib.rb', __FILE__)
 
 module Hipe
-  module Gentest
-    class UngenTask
-      include TaskLib
+  module GenTest
+    class UnGenTask
+      include Hipe::GenTest::TaskLib
       def initialize name=:ungen, argv=ARGV
         @argv = argv
         @desc = "ungentest -- try it and see!"
@@ -11,15 +11,17 @@ module Hipe
         yield self if block_given?
         define
       end
+      attr_writer :desc
     private
       def define
+        desc @desc
         task(@name){ run }
       end
       def run
         require File.expand_path('../../gentest.rb', __FILE__)
-        fail('huh?') unless @name == @argv.shift
-        use_argv = argv.dup
-        argv.clear # don't let rake see (?)
+        fail('huh?') unless @argv.shift == @name.to_s
+        use_argv = @argv.dup
+        @argv.clear # don't let rake see (?)
         argv = use_argv
         if argv.size > 1
           puts "too many arguments: #{argv.inspect}"
@@ -36,7 +38,7 @@ module Hipe
           arg = argv.first
         end
         unless arg
-          puts <<-HERE.gsub(/^        /,'')
+          puts <<-HERE.gsub(/^            /,'')
 
             #{hdr 'Usage:'} #{cmd 'rake ungen'} -- <some-app-name.rb>
                    #{cmd 'rake ungen'} -- -list
@@ -53,7 +55,7 @@ module Hipe
         if arg=='-list'
           GenTest::ungentest_list 'test/test.rb'
         elsif arg
-          GentTest::ungentest 'test/test.rb', arg
+          GenTest::ungentest 'test/test.rb', arg
         end
         exit(0) # rake is annoying
       end

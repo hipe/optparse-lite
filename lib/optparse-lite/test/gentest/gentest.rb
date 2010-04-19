@@ -1,37 +1,13 @@
-module Hipe
-  class IndentingStream
-    def initialize io, indent
-      @io = io
-      @indent = indent
-    end
-    def indent!
-      @indent << '  '
-      self
-    end
-    def dedent!
-      @indent.sub!(/  $/,'')
-      self
-    end
-    def puts m=nil
-      return @io.puts if m.nil?
-      m = m.split("\n") if m.kind_of? String
-      m = [m] unless m.kind_of? Array
-      @io.puts m.map{|x| "#{@indent}#{x}"}
-      self
-    end
-  end
-end
-
 module Hipe; end
 module Hipe::GenTest
   extend self # cheap way to get module_function s from everything
 
   def gentest argv
+    argv = argv.dup
     @both = false
     process_opts(argv) if /^-/ =~ argv.first
-    @service_controller = deduce_service_controller
+    @service_controller = deduce_services_controller
     @ui = Hipe::IndentingStream.new($stdout,'')
-    argv = argv.dup
     file = argv.shift
     mod = deduce_module_from_file file
     mod.spec.invocation_name = File.basename(file)
@@ -79,10 +55,16 @@ private
     go_diff diff, file
   end
 
-  def deduce_service_controller
-    dir = File.expand_path('../../lib',__FILE__)
+  def deduce_services_controller
+    # this is a ridiculous attempt to avoid hard-coding the name of
+    # the services module for use in disabling service applications.
+    # It wants the thing to be in only one file in /lib/, and it deduces
+    # the module name from the filename.  (note this is for the 'base module'
+    # library module that serves this crap, this is not the application service itself.)
+    #
+    dir = File.expand_path('../../../..',__FILE__)
     it = Dir["#{dir}/*.rb"]
-    fail("no files in dir #{dir}") if it.size == 0
+    fail("no '*.rb' files in dir \"#{dir}\"") if it.size == 0
     fail("too many files in #{dir}: "+it.map{|x| File.basename(x)}*',') if
       it.size != 1
     it = it.first
@@ -305,6 +287,30 @@ module Hipe::GenTest
         start_offset = self[cur][1]
         [start_offset, end_offset]
       end
+    end
+  end
+end
+
+module Hipe
+  class IndentingStream
+    def initialize io, indent
+      @io = io
+      @indent = indent
+    end
+    def indent!
+      @indent << '  '
+      self
+    end
+    def dedent!
+      @indent.sub!(/  $/,'')
+      self
+    end
+    def puts m=nil
+      return @io.puts if m.nil?
+      m = m.split("\n") if m.kind_of? String
+      m = [m] unless m.kind_of? Array
+      @io.puts m.map{|x| "#{@indent}#{x}"}
+      self
     end
   end
 end

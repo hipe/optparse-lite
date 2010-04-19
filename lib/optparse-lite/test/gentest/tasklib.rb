@@ -1,5 +1,5 @@
 module Hipe
-  module Gentest
+  module GenTest
     module TaskLib
       # quick little hack for colored formatting @todo windows
       # to give rake tasks colored/styles help screens
