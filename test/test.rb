@@ -649,7 +649,6 @@ module OptparseLite::Test
     end
   end
 
-
   class Sub
     include OptparseLite
 
@@ -667,7 +666,8 @@ module OptparseLite::Test
     }
     def foo_fric opts, arg
       opts.merge!({:arg=>arg, :method=>:foo_fric})
-      puts opts.inspect
+      thing = opts.keys.map(&:to_s).sort.map{|x| [x, opts[x.to_sym]]}
+      ui.puts thing.inspect
       opts
     end
 
@@ -678,7 +678,8 @@ module OptparseLite::Test
     }
     def foo_bric_dic opts, arg
       opts.merge!({:arg=>arg, :method=>:foo_bric_dic})
-      puts opts.inspect
+      thing = opts.keys.map(&:to_s).sort.map{|x| [x, opts[x.to_sym]]}
+      ui.puts thing.inspect
       opts
     end
 
@@ -710,6 +711,18 @@ module OptparseLite::Test
           -f    this does blah
       HERE
       act = _run{ run ["foo", "-h", "fric"] }
+      assert_no_diff(exp, act)
+    end
+    it 'sub-app.rb must work' do
+      exp = <<-HERE.noindent
+        [[\"arg\", \"frak\"], [\"method\", :foo_fric]]
+      HERE
+      act = _run{ run ["foo", "fric", "frak"] }
+      assert_no_diff(exp, act)
+      exp = <<-HERE.noindent
+        [[\"arg\", \"frak\"], [\"method\", :foo_fric]]
+      HERE
+      act = _run{ run ["foo", "fri", "frak"] }
       assert_no_diff(exp, act)
     end
   end

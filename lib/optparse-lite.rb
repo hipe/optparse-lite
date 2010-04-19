@@ -104,8 +104,7 @@ private
     end
   private
     def command_method_names
-      @order & (
-        @mod.public_instance_methods(false) |
+      @order & (@mod.public_instance_methods(false) |
         @commands.map{|x| x.method_name }
       )
     end
@@ -228,18 +227,12 @@ private
       return nil if match.nil? # maybe want to have them but not show them?
       [:opts, *opts.map{|o| o.syntax_tokens.map{|x| "[#{x}]"}}.flatten]
     end
-    def subcommands_init names
-      @subcommand_method_names = names.map do |n|
-        "#{@method_name}_#{methodize(n)}"
-      end
-    end
     def subcommand_sexp str
       md = /\A(.*)<subcommand>(.*)\Z/.match(str)
-      [
-        md[1].empty? ? nil : [:txt, md[1]],
+      x = [md[1].empty? ? nil : [:txt, md[1]],
         [:or, *subcommands.map{|x| [:cmds, x.given_name.to_s] }],
         md[2].empty? ? nil : [:txt, md[2]]
-      ].compact
+      ]; x.compact
     end
     def unbound_method
       @spec.unbound_method method_name
