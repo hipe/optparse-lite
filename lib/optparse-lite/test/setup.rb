@@ -45,9 +45,10 @@ module OptparseLite
       #
       def _run app=nil, &b
         app ||= guess_app
-        app.ui.push
+        ui = app.send(:ui)
+        ui.push
         _ = app.instance_eval(&b)
-        str = app.ui.pop.to_str # tacitly assumes stderr is empty, breaks else
+        str = ui.pop.to_str # tacitly assumes stderr is empty, breaks else
         $stdout.puts "\n\n#{str}\n" if Test.verbose
         str
       end

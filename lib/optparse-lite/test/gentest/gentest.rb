@@ -171,9 +171,10 @@ private
   end
 
   def run mod, &block
-    mod.ui.push
+    ui = mod.send(:ui) # it's public on service class, private on mod. singles
+    ui.push
     _ = mod.instance_eval(&block)
-    mod.ui.pop
+    ui.pop
   end
 
   def run2 mod, &block

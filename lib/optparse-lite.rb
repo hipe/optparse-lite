@@ -9,7 +9,10 @@ module OptparseLite
         mod.init_service_class
         mod.send(:include, ServiceObject)
       else
-        fail "module controller singletons not yet implemented"
+        mod.extend mod # (hack) methods effectively become module_methods
+        mod.extend ServiceModuleSingleton
+        mod.init_service_class
+        mod.init_service_module_singleton
       end
     end
     def suppress_run!; @run_enabled = false end
@@ -20,6 +23,7 @@ private
   # forward declarations (everything is in alphabetical order):
   module Lingual;    end
   module HelpHelper; end
+  module ServiceObject; end
   class AppSpec
     include Lingual
     def initialize mod
@@ -246,7 +250,7 @@ private
   end
   class DescriptionAndOpts < Array
     def any?
-      detect{|x| x.kind_of?(String) || x.kind_of?(DocBlock)}
+      detect{|x| x.kind_of?(String)}
     end
     def first_desc_line
       if (one = any?)
@@ -254,7 +258,6 @@ private
       end
     end
   end
-  module DocBlock; end
   class Dispatcher
     include HelpHelper
     def initialize impl, spec, ui
@@ -514,6 +517,19 @@ private
     alias_method :desc, :x
     def method_added method_sym
       @spec.method_added_notify method_sym
+    end
+  end
+  module ServiceModuleSingleton
+    include ServiceClass
+    include ServiceObject
+    def init_service_module_singleton
+      @dispatcher = Dispatcher.new(self, @spec, @ui)
+    end
+    def run argv=ARGV
+      argv = argv.dup # never change caller's array
+      return @ui.err.puts('run disabled. (probably for gentesting)') unless
+        OptparseLite.run_enabled?
+      @dispatcher.run argv
     end
   end
   module ServiceObject

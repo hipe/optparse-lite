@@ -140,21 +140,6 @@ module OptparseLite::Test
     end
   end
 
-
-  module NoOptparseLiteForU
-  end
-  describe NoOptparseLiteForU do
-    it "should raise on trying to do module (for now. "<<
-                                      "this will be changed.)" do
-      e = assert_raises(RuntimeError){
-        NoOptparseLiteForU.send(:include, OptparseLite)
-      }
-      assert_equal e.message,
-        "module controller singletons not yet implemented"
-    end
-  end
-
-
   class OneMethWithNegArity
     include OptparseLite
     def bar(*a); end
@@ -726,6 +711,38 @@ module OptparseLite::Test
         [[\"arg\", \"frak\"], [\"method\", :foo_fric]]
       HERE
       act = _run{ run ["foo", "fri", "frak"] }
+      assert_no_diff(exp, act)
+    end
+  end
+
+
+  module Mod
+    include OptparseLite
+    opts {
+      banner 'Fun Options:'
+      opt '-a, --alpha', 'desco', :foo
+      opt '-b, --beta=<foo>', 'desc for beta', :fooey, 'more desc for beta'
+      banner 'Eric Banner:'
+      banner 'not eric banner, just some desco'
+      banner 'another not banner, just some chit chat:'
+      opt '--gamma[=<baz>]','gamma is where it\'s at'
+      opt '--[no-]mames', :juae
+    }
+    def foo opts, arg1, arg2
+      @ui.puts "rock on #{arg1} rock on #{arg2}"
+    end
+
+    def bar arg2
+    end
+  end
+  Mod.spec.invocation_name = "mod-app.rb"
+
+  describe Mod do
+    it 'mod-app.rb must work' do
+      exp = <<-HERE.noindent
+        rock on new york rock on chicago
+      HERE
+      act = _run{ run ["foo", "new york", "chicago"] }
       assert_no_diff(exp, act)
     end
   end
