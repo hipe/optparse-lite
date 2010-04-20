@@ -1,3 +1,7 @@
+require File.expand_path('../../lib/optparse-lite.rb', __FILE__)
+require File.expand_path('../../lib/optparse-lite/test/setup.rb', __FILE__)
+
+# wierd bug!!!  ruby test/test.rb --seed 31196
 
 module OptparseLite::Test
 
