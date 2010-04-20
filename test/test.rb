@@ -5,6 +5,8 @@ require File.expand_path('../../lib/optparse-lite/test/setup.rb', __FILE__)
 
 module OptparseLite::Test
 
+  include OptparseLite::Test::ConsoleCapture
+
   class Empty
     include OptparseLite
   end
@@ -15,19 +17,17 @@ module OptparseLite::Test
       exp = <<-HERE.noindent
         \e[32;mUsage:\e[0m empty-app.rb (this screen. no commands defined.)
       HERE
-      act = _run{ run [] }
+      act = capture{ run [] }
       assert_no_diff(exp, act)
     end
 
     it 'no run' do
+      require 'ruby-debug'
       OptparseLite.suppress_run!
-      hold = Empty.ui.err
-      Empty.ui.err = OptparseLite::Sio.new
-      Empty.run
-      have = Empty.ui.err
-      Empty.ui.err = hold
+      out, err = capture2{ run [] }
       OptparseLite.enable_run!
-      assert_equal "run disabled. (probably for gentesting)\n", have.to_s
+      assert_equal "run disabled. (probably for gentesting)\n", err
+      assert_equal "", out
     end
   end
 
@@ -52,7 +52,7 @@ module OptparseLite::Test
         i don't know how to \e[32;mbazzle\e[0m.
         try \e[32;mone-meth-app.rb\e[0m \e[32;m-h\e[0m for help.
       HERE
-      act = _run{ run ["bazzle"] }
+      act = capture{ run ["bazzle"] }
       assert_no_diff(exp, act)
     end
 
@@ -65,7 +65,7 @@ module OptparseLite::Test
           bar    usage: bar
         type -h after a command or subcommand name for more help
       HERE
-      act = _run{ run ["-h"] }
+      act = capture{ run ["-h"] }
       assert_no_diff(exp, act)
     end
 
@@ -78,7 +78,7 @@ module OptparseLite::Test
           bar    usage: bar
         type -h after a command or subcommand name for more help
       HERE
-      act = _run{ run [] }
+      act = capture{ run [] }
       assert_no_diff(exp, act)
     end
 
@@ -88,7 +88,7 @@ module OptparseLite::Test
         i don't know how to \e[32;mska\e[0m.
         try \e[32;mone-meth-app.rb\e[0m \e[32;m-h\e[0m for help.
       HERE
-      act = _run{ run ["-h", "ska"] }
+      act = capture{ run ["-h", "ska"] }
       assert_no_diff(exp, act)
     end
 
@@ -97,7 +97,7 @@ module OptparseLite::Test
       exp = <<-HERE.noindent
         \e[32;mUsage:\e[0m one-meth-app.rb bar
       HERE
-      act = _run{ run ["-h", "b"] }
+      act = capture{ run ["-h", "b"] }
       assert_no_diff(exp, act)
     end
 
@@ -106,7 +106,7 @@ module OptparseLite::Test
       exp = <<-HERE.noindent
         \e[32;mUsage:\e[0m one-meth-app.rb bar
       HERE
-      act = _run{ run ["-h", "bar"] }
+      act = capture{ run ["-h", "bar"] }
       assert_no_diff(exp, act)
     end
   end
@@ -130,12 +130,12 @@ module OptparseLite::Test
       exp = <<-HERE.noindent
         i have pinged 1 times
       HERE
-      act = _run{ run ["ping"] }
+      act = capture{ run ["ping"] }
       assert_no_diff(exp, act)
       exp = <<-HERE.noindent
         i have pinged 2 times
       HERE
-      act = _run{ run ["ping"] }
+      act = capture{ run ["ping"] }
       assert_no_diff(exp, act)
     end
   end
@@ -155,7 +155,7 @@ module OptparseLite::Test
           bar    usage: bar [<arg1>]
         type -h after a command or subcommand name for more help
       HERE
-      act = _run{ run [] }
+      act = capture{ run [] }
       assert_no_diff(exp, act)
     end
   end
@@ -176,7 +176,7 @@ module OptparseLite::Test
           bar    usage: bar <arg1>
         type -h after a command or subcommand name for more help
       HERE
-      act = _run{ run [] }
+      act = capture{ run [] }
       assert_no_diff(exp, act)
     end
   end
@@ -202,7 +202,7 @@ module OptparseLite::Test
           bar    this is for barring
         type -h after a command or subcommand name for more help
       HERE
-      act = _run{ run [] }
+      act = capture{ run [] }
       assert_no_diff(exp, act)
     end
     it 'one-meth-desc-app.rb ask for help must work' do
@@ -210,7 +210,7 @@ module OptparseLite::Test
         \e[32;mUsage:\e[0m one-meth-desc-app.rb bar
         \e[32;mDescription:\e[0m this is for barring
       HERE
-      act = _run{ run ["-h", "bar"] }
+      act = capture{ run ["-h", "bar"] }
       assert_no_diff(exp, act)
     end
   end
@@ -231,7 +231,7 @@ module OptparseLite::Test
           bar    usage: bar <paint> <ball>
         type -h after a command or subcommand name for more help
       HERE
-      act = _run{ run [] }
+      act = capture{ run [] }
       assert_no_diff(exp, act)
     end
   end
@@ -259,7 +259,7 @@ module OptparseLite::Test
           faz    faz line one
         type -h after a command or subcommand name for more help
       HERE
-      act = _run{ run [] }
+      act = capture{ run [] }
       assert_no_diff(exp, act)
     end
 
@@ -268,7 +268,7 @@ module OptparseLite::Test
         i don't know how to \e[32;mska\e[0m.
         try \e[32;mthree-meth-app.rb\e[0m \e[32;m-h\e[0m for help.
       HERE
-      act = _run{ run ["-h", "ska"] }
+      act = capture{ run ["-h", "ska"] }
       assert_no_diff(exp, act)
     end
 
@@ -277,7 +277,7 @@ module OptparseLite::Test
         did you mean \e[32;mfoo\e[0m or \e[32;mfaz\e[0m?
         try \e[32;mthree-meth-app.rb\e[0m \e[32;m-h\e[0m for help.
       HERE
-      act = _run{ run ["-h", "f"] }
+      act = capture{ run ["-h", "f"] }
       assert_no_diff(exp, act)
     end
 
@@ -288,7 +288,7 @@ module OptparseLite::Test
           faz line one
           faz line two
       HERE
-      act = _run{ run ["-h", "fa"] }
+      act = capture{ run ["-h", "fa"] }
       assert_no_diff(exp, act)
     end
   end
@@ -336,7 +336,7 @@ module OptparseLite::Test
           foo    usage: foo [--fake] [-b=<foo>]
         type -h after a command or subcommand name for more help
       HERE
-      act = _run{ run [] }
+      act = capture{ run [] }
       assert_no_diff(exp, act)
     end
     it 'cmd-with-opts-app.rb multiline description stub' do
@@ -346,7 +346,7 @@ module OptparseLite::Test
               -h,--hey    awesome desc
           -H,--HO=<ho>    awesome desc2
       HERE
-      act = _run{ run ["-h", "foo"] }
+      act = capture{ run ["-h", "foo"] }
       assert_no_diff(exp, act)
     end
   end
@@ -371,7 +371,7 @@ module OptparseLite::Test
       exp = <<-HERE.noindent
         \e[32;mUsage:\e[0m cov-patch-app.rb wierd-usage [-blah -blah] <blah1> <blah2>
       HERE
-      act = _run{ run ["-h", "wierd-"] }
+      act = capture{ run ["-h", "wierd-"] }
       assert_no_diff(exp, act)
     end
 
@@ -380,7 +380,7 @@ module OptparseLite::Test
       exp = <<-HERE.noindent
         \e[32;mUsage:\e[0m cov-patch-app.rb useless-interpolate -one -opt -another <arg1> <arg2>
       HERE
-      act = _run{ run ["-h", "use"] }
+      act = capture{ run ["-h", "use"] }
       assert_no_diff(exp, act)
     end
   end
@@ -429,7 +429,7 @@ module OptparseLite::Test
         \e[32;mThis is banner:\e[0m
                 -a,-b    bloofis goofis
       HERE
-      act = _run{ run ["-h", "fix"] }
+      act = capture{ run ["-h", "fix"] }
       assert_no_diff(exp, act)
     end
   end
@@ -476,7 +476,7 @@ module OptparseLite::Test
           do-it    usage: do-it [--alpha,-a] [--beta,-b=<foo>] [--gamma[=<baz>]] [--[no-]mames] <arg1> [<arg2>]
         type -h after a command or subcommand name for more help
       HERE
-      act = _run{ run [] }
+      act = capture{ run [] }
       assert_no_diff(exp, act)
     end
 
@@ -493,7 +493,7 @@ module OptparseLite::Test
            --gamma[=<baz>]    gamma is where it's at
               --[no-]mames
       HERE
-      act = _run{ run ["-h", "do"] }
+      act = capture{ run ["-h", "do"] }
       assert_no_diff(exp, act)
     end
 
@@ -508,7 +508,7 @@ module OptparseLite::Test
         \e[32;mUsage:\e[0m finally-app.rb do-it [--alpha,-a] [--beta,-b=<foo>] [--gamma[=<baz>]] [--[no-]mames] <arg1> [<arg2>]
         try \e[32;mfinally-app.rb\e[0m \e[32;mhelp\e[0m \e[32;mdo-it\e[0m for full syntax and usage.
       HERE
-      act_out, act_err = _run2{ run ["do", "--not=an", "option", "--beta", "--alpha=yo", "--no-mames"] }
+      act_out, act_err = capture2{ run ["do", "--not=an", "option", "--beta", "--alpha=yo", "--no-mames"] }
       assert_no_diff(exp_out, act_out)
       assert_no_diff(exp_err, act_err)
     end
@@ -555,7 +555,7 @@ module OptparseLite::Test
         \e[32;mUsage:\e[0m raiser-app.rb ui-level-error <arg1> <arg2>
         try \e[32;mraiser-app.rb\e[0m \e[32;mhelp\e[0m \e[32;mui-level-error\e[0m for full syntax and usage.
       HERE
-      act_out, act_err = _run2{ run ["ui-"] }
+      act_out, act_err = capture2{ run ["ui-"] }
       assert_no_diff(exp_out, act_out)
       assert_no_diff(exp_err, act_err)
     end
@@ -609,7 +609,7 @@ module OptparseLite::Test
                                multiline gamma
                 --delta, -d
       HERE
-      act = _run{ run ["-h", "go"] }
+      act = capture{ run ["-h", "go"] }
       assert_no_diff(exp, act)
     end
 
@@ -623,7 +623,7 @@ module OptparseLite::Test
         \e[32;mUsage:\e[0m agg-opts-app.rb go-with-it [--alpha,-a] [-b] [--gamma,-g=<foo>] [--delta,-d] <arg1> [<arg2>]
         try \e[32;magg-opts-app.rb\e[0m \e[32;mhelp\e[0m \e[32;mgo-with-it\e[0m for full syntax and usage.
       HERE
-      act_out, act_err = _run2{ run ["go", "--digle=fingle,", "--gamma,", "--alpha=foo"] }
+      act_out, act_err = capture2{ run ["go", "--digle=fingle,", "--gamma,", "--alpha=foo"] }
       assert_no_diff(exp_out, act_out)
       assert_no_diff(exp_err, act_err)
     end
@@ -632,7 +632,7 @@ module OptparseLite::Test
       exp = <<-HERE.noindent
         [[:b, \"heh but it's argless\"], [:first_arg, \"foo\"], [:gamma, \"great gams\"], [:second_arg, nil]]
       HERE
-      act = _run{ run ["go", "foo"] }
+      act = capture{ run ["go", "foo"] }
       assert_no_diff(exp, act)
     end
   end
@@ -687,9 +687,9 @@ module OptparseLite::Test
           frac        usage: foo frac
         type -h after a command or subcommand name for more help
       HERE
-      act = _run{ run ["foo"] }
+      act = capture{ run ["foo"] }
       assert_no_diff(exp, act)
-      act = _run{ run ["foo", "-h"] }
+      act = capture{ run ["foo", "-h"] }
       assert_no_diff(exp, act)
     end
     it 'sub-app.rb shows help on sub-command' do
@@ -698,19 +698,19 @@ module OptparseLite::Test
         \e[32;mDescription:\e[0m crank harder
           -f    this does blah
       HERE
-      act = _run{ run ["foo", "-h", "fric"] }
+      act = capture{ run ["foo", "-h", "fric"] }
       assert_no_diff(exp, act)
     end
     it 'sub-app.rb must work' do
       exp = <<-HERE.noindent
         [[\"arg\", \"frak\"], [\"method\", :foo_fric]]
       HERE
-      act = _run{ run ["foo", "fric", "frak"] }
+      act = capture{ run ["foo", "fric", "frak"] }
       assert_no_diff(exp, act)
       exp = <<-HERE.noindent
         [[\"arg\", \"frak\"], [\"method\", :foo_fric]]
       HERE
-      act = _run{ run ["foo", "fri", "frak"] }
+      act = capture{ run ["foo", "fri", "frak"] }
       assert_no_diff(exp, act)
     end
   end
@@ -742,8 +742,15 @@ module OptparseLite::Test
       exp = <<-HERE.noindent
         rock on new york rock on chicago
       HERE
-      act = _run{ run ["foo", "new york", "chicago"] }
+      act = capture{ run ["foo", "new york", "chicago"] }
       assert_no_diff(exp, act)
+    end
+    it 'mod-app.rb supressed must work' do
+      OptparseLite.suppress_run!
+      out, err = capture2{ run [] }
+      OptparseLite.enable_run!
+      assert_equal "run disabled. (probably for gentesting)\n", err
+      assert_equal "", out
     end
   end
 end
