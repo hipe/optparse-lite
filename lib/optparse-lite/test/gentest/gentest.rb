@@ -6,6 +6,7 @@ module Hipe::GenTest
     argv = argv.dup
     @both = false
     process_opts(argv) if /^-/ =~ argv.first
+
     @service_controller = deduce_services_controller
     @ui = Hipe::IndentingStream.new($stdout,'')
     file = argv.shift
@@ -62,7 +63,8 @@ private
     # the module name from the filename.  (note this is for the 'base module'
     # library module that serves this crap, this is not the application service itself.)
     #
-    dir = File.expand_path('../../../..',__FILE__)
+    # dir = File.expand_path('../../../..',__FILE__)
+    dir = FileUtils.pwd+'/lib'
     it = Dir["#{dir}/*.rb"]
     fail("no '*.rb' files in dir \"#{dir}\"") if it.size == 0
     fail("too many files in #{dir}: "+it.map{|x| File.basename(x)}*',') if
@@ -98,7 +100,10 @@ private
     svc = @service_controller
     these = diff.map do |name|
       const = Object.const_get(name)
-      (const.kind_of?(Module) && const.kind_of?(svc)) ? const : nil
+      (const.kind_of?(Module) &&
+        # for e.g. class Foo; include Trollip, the latter, etc
+        (const.kind_of?(svc) || const.ancestors.include?(svc))
+      ) ? const : nil
     end.compact
     case these.size;
     when 0:
@@ -117,12 +122,12 @@ private
 
   def go_act mod, args
     return go_act2(mod, args) if @both
-    @ui.puts("act = _run{ run #{args.inspect} }")
+    @ui.puts("act = capture{ run #{args.inspect} }")
     @ui.puts('assert_no_diff(exp, act)')
   end
 
   def go_act2 mod, args
-    @ui.puts("act_out, act_err = _run2{ run #{args.inspect} }")
+    @ui.puts("act_out, act_err = capture2{ run #{args.inspect} }")
     @ui.puts('assert_no_diff(exp_out, act_out)')
     @ui.puts('assert_no_diff(exp_err, act_err)')
   end
@@ -249,7 +254,7 @@ module Hipe::GenTest
           when /^  class ([a-z0-9:]+)/i;    push [:class, idx, $1]
           when /^  module ([a-z0-9:]+)/i;   push [:module, idx, $1]
           when /^  describe\b/; push [:describe, idx]
-          when /^ +it '([a-z0-9]+(?:-[a-z0-9]+)*-app\.rb)/
+          when /^ +it ['"]([a-z0-9]+(?:-[a-z0-9]+)*-app\.rb)/
             if last && last[2] != $1
               push [:it, idx, $1]
             end

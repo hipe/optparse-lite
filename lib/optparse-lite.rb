@@ -1,19 +1,21 @@
-require 'singleton'
 module OptparseLite
   @run_enabled = true
   class << self
     def included mod
-      if mod.kind_of?(Class)
-        mod.extend self # only for gentest!
-        mod.extend ServiceClass
-        mod.init_service_class
-        mod.send(:include, ServiceObject)
-      else
-        mod.extend mod # (hack) methods effectively become module_methods
-        mod.extend ServiceModuleSingleton
-        mod.init_service_class
-        mod.init_service_module_singleton
-      end
+      if mod.kind_of?(Class); init_service_class(mod, AppSpec)
+      else init_service_module(mod, AppSpec) end
+    end
+    def init_service_class mod, spec_class
+      mod.extend self # only for gentest!
+      mod.extend ServiceClass
+      mod.init_service_class spec_class
+      mod.send(:include, ServiceObject)
+    end
+    def init_service_module mod, spec_class
+      mod.extend mod # (hack) methods effectively become module_methods
+      mod.extend ServiceModuleSingleton
+      mod.init_service_class spec_class
+      mod.init_service_module_singleton
     end
     def suppress_run!; @run_enabled = false end
     def enable_run!; @run_enabled = true end
@@ -88,12 +90,15 @@ private
       @opts ||= []
       fail("can't take block and arg") if mixed && block
       if block
-        mixed = OptParser.new(&block)
+        mixed = parser_from_block(&block)
       else
         fail("opts must be OptsLike") unless mixed.kind_of?(OptsLike)
       end
       @opts.push @desc.size
       @desc.push mixed
+    end
+    def parser_from_block &block
+      OptParser.new(&block)
     end
     def subcommands *a
       @subcommands ||= []
@@ -138,6 +143,9 @@ private
     end
     def process_opt_parse_errors resp, opts={}
       opts = {opts=>true} if opts.kind_of?(Symbol)
+      return help_requested(resp) if ! resp.detect do |x|
+        ! x.respond_to?(:error_type) || x.error_type != :help_requested
+      end
       ui = @disp.ui.err
       ui.puts "#{prefix}couldn't #{cmd(pretty)} because of "<<
         Np.new(proc{|b| b ? 'the following' : 'an'},'error',resp.size)
@@ -223,6 +231,18 @@ private
       else OptParserAggregate.new(opts)
       end
     end
+    def help_requested errors
+      err = errors.first
+      if err.respond_to?(:"long_help?") && err.long_help?
+        @disp.help.command_help_full(self)
+      elsif err.respond_to?(:"version_requested?") && err.version_requested?
+        @disp.ui.puts err.parser.version
+      else
+        @disp.help.command_usage self, @disp.ui
+        @disp.help.invite_to_more_command_help_specific self, @disp.ui
+      end
+      0
+    end
     def one_of_ours e
       e.backtrace.first.index(__FILE__)# hack to see where it orignated
     end
@@ -306,7 +326,9 @@ private
       @spec = spec
       @ui = ui
     end
-    def command_help_full cmd_str, rest
+    def command_help_full cmd_str, rest=[]
+      return command_help_full_actual(cmd_str, rest) unless
+        cmd_str.kind_of?(String)
       if found = find_one_loudly(cmd_str, @spec)
         if rest.any?
           command_help_full "#{cmd_str} #{rest.shift}", rest
@@ -409,8 +431,8 @@ private
       invite_to_more_command_help_general
     end
     class SexpWrapper # hack so you can access .first on nil nodes
-      class NilSexpClass; include Singleton; def first; nil end end
-      NilSexp = NilSexpClass.instance
+      class NilSexpClass; def first; nil end end
+      NilSexp = NilSexpClass.new
       def initialize(sexp); @sexp = sexp end
       def each_with_index(*a, &b); @sexp.each_with_index(*a, &b); end
       def [](idx); it = @sexp[idx] and it or NilSexp; end
@@ -477,15 +499,15 @@ private
     end
   end
   module OptsLike
-    # syntax_tokens
+    # syntax_tokens, parse, doc_sexp
   end
   module OptsBlock
     include OptsLike
   end
   module ServiceClass
-    def init_service_class
+    def init_service_class spec_class
       @instance ||= nil
-      @spec = AppSpec.new(self)
+      @spec = spec_class.new(self)
       @ui = Ui.new
     end
     attr_reader :ui, :spec
@@ -732,7 +754,8 @@ module OptparseLite
     end
     class Response < Array
       include OptHelper, HelpHelper
-      def initialize
+      def initialize hack_start=nil
+        super(hack_start) if hack_start
         @memoish = {}
       end
       def all_indexes sym
@@ -784,8 +807,10 @@ module OptparseLite
       def error_init error_type, opts
         @error_type = error_type
         opts.each do |(k,v)|
-          instance_variable_set("@#{k}", v)
-          def!(k){instance_variable_get("@#{k}")}
+          /^(.+[^?])(\?)?$/ =~ k.to_s
+          attr_name = $1
+          instance_variable_set("@#{attr_name}", v)
+          def!(k){ instance_variable_get("@#{attr_name}") }
         end
       end
     private

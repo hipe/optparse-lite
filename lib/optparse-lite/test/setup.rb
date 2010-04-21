@@ -27,7 +27,7 @@ module OptparseLite
     class << self
       attr_accessor :verbose # set below
     end
-    module ConsoleCapture
+    module Capture
       class Capturer
         def initialize mod
           # make a regexp that can deduce the local module name from the

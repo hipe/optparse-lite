@@ -5,7 +5,7 @@ require File.expand_path('../../lib/optparse-lite/test/setup.rb', __FILE__)
 
 module OptparseLite::Test
 
-  include OptparseLite::Test::ConsoleCapture
+  include OptparseLite::Test::Capture
 
   class Empty
     include OptparseLite
@@ -22,7 +22,6 @@ module OptparseLite::Test
     end
 
     it 'no run' do
-      require 'ruby-debug'
       OptparseLite.suppress_run!
       out, err = capture2{ run [] }
       OptparseLite.enable_run!
@@ -751,6 +750,90 @@ module OptparseLite::Test
       OptparseLite.enable_run!
       assert_equal "run disabled. (probably for gentesting)\n", err
       assert_equal "", out
+    end
+  end
+
+  module ForeignParser
+    include OptparseLite
+    class MockParser
+      include OptparseLite::OptsLike
+      Response = OptparseLite::OptParser::Response
+      Error = OptparseLite::OptParser::Error
+      class VersionHaver
+        def version; 'awesome-foo 1.2.3' end
+      end
+      def parse argv
+        if argv.include?('-v')
+          return [
+            Response.new([
+              Error.new(
+                :help_requested, 'nosee',
+                :'version_requested?'=>true,
+                :parser => VersionHaver.new
+              )
+            ]),
+          {}]
+        end
+        if argv.include?('-h')
+          return [
+            Response.new([
+              Error.new(:help_requested, 'nosee')
+            ]),
+          {}]
+        end
+        if argv.include?('--help')
+          return [
+            Response.new([
+              Error.new(:help_requested, 'nosee', :'long_help?'=>true)
+            ]),
+          {}]
+        end
+
+        [Response.new(),{}]
+      end
+      def syntax_tokens; ['-h','-v'] end
+      def doc_sexp; [[:txt,'just pass -v or -h to test this']] end
+    end
+    opts MockParser.new
+    def foo opts
+      @ui.puts opts.inspect
+    end
+  end
+  ForeignParser.spec.invocation_name = "foreign-parser-app.rb"
+
+  describe ForeignParser do
+    it '"foreign-parser-app.rb -h" lists commands' do
+      exp = <<-HERE.noindent
+        \e[32;mUsage:\e[0m foreign-parser-app.rb foo [-h] [-v]
+        \e[32;mDescription:\e[0m
+        just pass -v or -h to test this
+      HERE
+      act = capture{ run ["-h", "foo"] }
+      assert_no_diff(exp, act)
+    end
+    it '"foreign-parser-app.rb <command> -h" gives short command help' do
+      exp = <<-HERE.noindent
+        \e[32;mUsage:\e[0m foreign-parser-app.rb foo [-h] [-v]
+        try \e[32;mforeign-parser-app.rb\e[0m \e[32;mhelp\e[0m \e[32;mfoo\e[0m for full syntax and usage.
+      HERE
+      act = capture{ run ["foo", "-h"] }
+      assert_no_diff(exp, act)
+    end
+    it '"foreign-parser-app.rb <command> --help" gives longer help' do
+      exp = <<-HERE.noindent
+        \e[32;mUsage:\e[0m foreign-parser-app.rb foo [-h] [-v]
+        \e[32;mDescription:\e[0m
+        just pass -v or -h to test this
+      HERE
+      act = capture{ run ["foo", "--help"] }
+      assert_no_diff(exp, act)
+    end
+    it '"foreign-parser-app.rb <command> -v" shows version' do
+      exp = <<-HERE.noindent
+        awesome-foo 1.2.3
+      HERE
+      act = capture{ run ["foo", "-v"] }
+      assert_no_diff(exp, act)
     end
   end
 end
