@@ -270,12 +270,15 @@ private
   end
   class DescriptionAndOpts < Array
     def any?
-      detect{|x| x.kind_of?(String)}
+      detect{|x| x.respond_to?(:to_str)}
     end
     def first_desc_line
-      if (one = any?)
-        one.kind_of?(String) ? one : one.first_desc_line
+      resp = nil
+      each do |x|
+        resp = x.kind_of?(String) ? x : x.first_desc_line
+        break if resp
       end
+      resp
     end
   end
   class Dispatcher
@@ -303,9 +306,12 @@ private
     def help_requested?(argv)
       ['-h','--help','-?','help'].include? argv[0]
     end
+    # Not sure about this.  'lines like this:' usually aren't headers
+    # but maybe 'Lines Like This:' are.  are 'Lines like this:' ?
     def looks_like_header? line
       /\A[A-Z0-9][A-Za-z]*(?:\s[A-Za-z0-9]*)*:\s*\Z/ =~ line
     end
+    # Codes = {:red=>'31', :green=>'32', :yellow=>'33', :bold=>'1', :blink=>5}
     def hdr(str); "\e[32;m#{str}\e[0m" end
     def prefix; "#{spec.invocation_name}: " end
     def txt(str); str end
