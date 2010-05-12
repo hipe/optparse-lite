@@ -1,5 +1,5 @@
 require 'minitest/autorun'
-require File.dirname(__FILE__)+'/minitest-diff-extlib.rb'
+require 'nandoc/test/minitest-extlib'
 
 
 # hack to turn off randomness, for running the simplest
