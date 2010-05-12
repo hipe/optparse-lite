@@ -2,6 +2,11 @@ module Hipe; end
 module Hipe::GenTest
   extend self # cheap way to get module_function s from everything
 
+  # @todo coloriziation aware somehow
+  def task_prefix
+    "\e[35mgentest\e[0m "
+  end
+
   def gentest argv
     argv = argv.dup
     @both = false

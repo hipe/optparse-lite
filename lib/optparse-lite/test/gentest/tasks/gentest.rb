@@ -6,7 +6,7 @@ module Hipe
       include Hipe::GenTest::TaskLib
       def initialize name=:gentest, argv=ARGV
         @argv = argv
-        @desc = "gentest -- try it and see!"
+        @desc = "#{GenTest.task_prefix}try it and see!"
         @name = name
         yield self if block_given?
         define
