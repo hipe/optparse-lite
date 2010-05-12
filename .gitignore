@@ -1,4 +1,7 @@
 *-app.rb
-coverage/
 NOGIT-*
+mysite/coverage/
+mysite/output/
+mysite/tmp/
+*.persistent.json
 pkg/
