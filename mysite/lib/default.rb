@@ -3,3 +3,4 @@
 
 include Nanoc3::Helpers::LinkTo
 include NanDoc::Helpers::NanDocHelpers
+require 'optparse-lite/test/nandoc-extlib'
