@@ -1,1 +1,32 @@
-"half the size, half the features of trollop/trollip"
+<embed style='float: right'
+  src="svg/not-funny.svg" width="175px" height="130px"
+  type="image/svg+xml"
+  pluginspage="http://www.adobe.com/svg/viewer/install/"
+/>
+
+# optparse-lite
+
+#### _what the world needs now_ ####
+
+
+## Summary
+
+You've seen Getopt::Long, OptionParser, Rake, Thor?  What the world needs now is one more command-line parser.  Arbitrarily deeply nested subcommands (lazily loaded), colors, manpage generation, usage syntax generation, option-parsing adapter interface.[^maybe]
+
+
+## Description
+
+You've seen Getopt::Long, OptionParser, Thor?  What the world needs now is one more command-line parser.  This serves as a backend command line parser that passes the option-parsing portion of it off to OptionParser, Trollop, or any other option-parser that has an adapter[^adapter].  But the parts it *does* do are really exciting: It features arbitrarily deeply nested subcommands, optionally colorized help screens with smart formatting, automatically generated usage syntaxes, manpage generation[^maybe2], lazy-loading of subcommands, and (get this:) you can turn your command line app into a web app. (is processing a form then displaying a record really that different from CLI that does the same?)[^maybe3]
+
+## Awesome
+  * [<%= rcov_last_percentage_pretty %> test coverage](/coverage) by the authority vested in [rcov](http://eigenclass.org/hiki.rb?rcov)
+  * <%= rcov_last_sloc_pretty %> source lines of code in a [single file](http://github.com/hipe/optparse-lite/blob/master/lib/optparse-lite.rb)
+  * zero dependencies on anything&reg; except ruby 1.8.7
+
+<br />
+<hr />
+### _Footnotes_
+[^maybe]: some of these features are in the works, or were working at one point but are part of a grand refactor, *or* will be a part of `optparse-heavy` (vaporware from the future, not yet arrived)
+[^maybe2]: from the future (_ibid._)
+[^maybe3]: from the future (_ibid. ibid._)
+[^adapter]: currently there is only an adapter for Trollop!
