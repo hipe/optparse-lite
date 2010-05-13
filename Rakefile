@@ -1,43 +1,55 @@
-# require 'rubygems'
 require 'rake/testtask.rb'
-require 'rake/gempackagetask.rb'
 require File.expand_path('../lib/optparse-lite.rb', __FILE__)
-lib = File.expand_path('../lib/optparse-lite/test', __FILE__)
-require lib + '/gentest/tasks/gentest.rb'
-require lib + '/gentest/tasks/ungen.rb'
+require File.expand_path('../lib/optparse-lite/test/gentest/tasks', __FILE__)
+require 'nandoc' # RcovAgent, ParseReadme
+
 
 task :default => :test
 
-spec = Gem::Specification.new do |s|
-  s.name = "optparse-lite"
-  s.version = '0.0.0'
-  s.date = Time.now.to_s
-  s.email = "chip.malice@gmail.com"
-  s.authors = ["Chip Malice"]
-  s.summary = "half the size, half the features of trollop/trollip"
-  # s.homepage = "http://foo.rubyforge.org"
-  s.files = %w(
-    lib/optparse-lite.rb
-    test/test.rb
-    ) + Dir["*.txt"]
-  s.executables = []
-  # s.rubyforge_project = "optparse-lite"
-  s.description = "foo, bar."
-end
+# require 'jeweler'
 
-Rake::GemPackageTask.new(spec){}
+# require 'nandoc/parse-readme'
+#
+# Jeweler::Tasks.new do |s|
+#   s.authors = ['Chip Malice']
+#   # s.description = NanDoc::ParseReadme.description('README')
+#   s.email = 'chip.malice@gmail.com'
+#   s.executables = []
+#   s.files =  FileList['[A-Z]*', '{bin,doc,generators,lib,test}/**/*']
+#   s.homepage = "http://optparse-lite.rubyforge.org"
+#   s.files = %w(
+#     lib/optparse-lite.rb
+#     test/test.rb
+#     ) + Dir['*.txt']
+#   s.homepage = 'http://optparse-lite.hipeland.org'
+#   s.name = 'optparse-lite'
+#   s.rubyforge_project = 'optparse-lite'
+#   # s.summary = NanDoc::ParseReadme.summary('README')
+#   s.summary = "half the size, half the features of trollop/trollip"
+#
+#   # deps
+#   s.add_dependency 'json', '~> 1.2.3'
+# end
 
 Rake::TestTask.new do |t|
   t.verbose = true
   t.warning = true
 end
 
-desc "generate rcov coverage"
+me = "\e[35mopl\e[0m "
+
+teh_file = './.last-rcov'
+desc "#{me}generate rcov coverage, write to #{teh_file}"
 task :rcov do
-  sh %!rcov --exclude '.*gem.*' test/test.rb!
+  require File.dirname(__FILE__)+'/lib/optparse-lite/test/nandoc-extlib'
+  agent = NanDoc::RcovAgent.new do |ag|
+    output_dir 'mysite/output/coverage'
+    input_file 'test/test.rb'
+  end
+  agent.run
 end
 
-desc "hack turns the installed gem into a symlink to this directory"
+desc "#{me}hack turns the installed gem into a symlink to this directory"
 task :hack do
   kill_path = %x{gem which optparse-lite}
   kill_path = File.dirname(File.dirname(kill_path))
