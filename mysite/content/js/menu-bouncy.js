@@ -123,4 +123,15 @@ $(document).ready(function(){
     setupHotspotAndMenu(hotspot, menu);
   }
 
+  jQuery.fn.hipe_not_a_link = function(){
+    return this.each(function(){
+      el = $(this);
+      el.click(function(e){
+        e.stopPropagation();
+        return false;
+      });
+    });
+  };
+  jQuery('a.not-really-a-link').hipe_not_a_link();
+
 });
