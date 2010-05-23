@@ -19,9 +19,14 @@ You've seen Getopt::Long, OptionParser, Rake, Thor?  What the world needs now is
 You've seen Getopt::Long, OptionParser, Thor?  What the world needs now is one more command-line parser.  This serves as a backend command line parser that passes the option-parsing portion of it off to OptionParser, Trollop, or any other option-parser that has an adapter[^adapter].  But the parts it *does* do are really exciting: It features arbitrarily deeply nested subcommands, optionally colorized help screens with smart formatting, automatically generated usage syntaxes, manpage generation[^maybe2], lazy-loading of subcommands, and (get this:) you can turn your command line app into a web app. (is processing a form then displaying a record really that different from CLI that does the same?)[^maybe3]
 
 ## Awesome
-  * [<%= rcov_last_percentage_pretty %> test coverage](/coverage) by the authority vested in [rcov](http://eigenclass.org/hiki.rb?rcov)
+  * [<%= rcov_last_percentage_pretty %> test coverage](/coverage/) by the authority vested in [rcov](http://eigenclass.org/hiki.rb?rcov)
   * <%= rcov_last_sloc_pretty %> source lines of code in a [single file](http://github.com/hipe/optparse-lite/blob/master/lib/optparse-lite.rb)
   * zero dependencies on anything&reg; except ruby 1.8.7
+
+
+These and more exciting features guarantee that what everyone's been saying will be true: that 2011 will indeed be the year for command-line interfaces.
+
+Like what you hear and can't wait to get typing? [Install](/installation/) it then [use](/usage/) it!
 
 <br />
 <hr />
