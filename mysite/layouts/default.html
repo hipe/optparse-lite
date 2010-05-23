@@ -1,14 +1,21 @@
-<!DOCTYPE HTML>
-<html lang="en">
+<html xmlns="http://www.w3.org/1999/xhtml">
   <head>
-    <meta charset="utf-8">
+    <meta charset="utf-8" />
     <title>hipeland - opl - <%= @item.nandoc_title %></title>
-    <link rel="stylesheet" type="text/css" href="/css/nanoc-dist-altered.css" media="screen">
-    <link rel="stylesheet" type="text/css" href="/css/trollop-subset.css" media="screen">
+    <link rel="stylesheet" type="text/css" href="/css/nanoc-dist-altered.css" media="screen" />
+    <link rel="stylesheet" type="text/css" href="/css/trollop-subset.css" media="screen" />
+    <% if item.attributes[:stylesheet]
+      use_name = item.attributes[:stylesheet]
+      use_name = "#{File.basename(item.path)}\.css" if use_name == 'self'
+      use_name = "#{use_name}\.css" unless /\.css\Z/ =~ use_name
+    %>
+    <link rel="stylesheet" type="text/css" href="/css/<%= use_name %>" media="screen" />
+    <% end %>
+
     <script type="text/javascript" src="/vendor/jquery-1.3.js"></script>
     <script type="text/javascript" src="/vendor/jquery.easing.1.3.js"></script>
     <script type="text/javascript" src="/js/menu-bouncy.js"></script>
-    <meta name="generator" content="nanoc 3.1.2">
+    <meta name="generator" content="nanoc 3.1.2" />
   </head>
   <body>
     <div class="sidebar">
@@ -64,7 +71,7 @@
       </div>
       <div class='clear'></div>
       <%= yield %>
-      <div class='clear'>&nbsp;</div>
+      <div class='clear'>&#160;</div>
     </div>
   </body>
 </html>
