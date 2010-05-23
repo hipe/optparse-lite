@@ -4,6 +4,10 @@ module OptparseLite
     def included mod
       if mod.kind_of?(Class); init_service_class(mod, AppSpec)
       else init_service_module(mod, AppSpec) end
+      if @after_included_once
+        @after_included_once.call(mod)
+        @after_included_once = nil
+      end
     end
     def init_service_class mod, spec_class
       mod.extend self # only for gentest!
@@ -16,6 +20,9 @@ module OptparseLite
       mod.extend ServiceModuleSingleton
       mod.init_service_class spec_class
       mod.init_service_module_singleton
+    end
+    def after_included_once &b
+      @after_included_once = b
     end
     def suppress_run!; @run_enabled = false end
     def enable_run!; @run_enabled = true end
@@ -512,6 +519,7 @@ private
   end
   module ServiceClass
     def init_service_class spec_class
+      @argv_hook = nil
       @instance ||= nil
       @spec = spec_class.new(self)
       @ui = Ui.new
@@ -526,6 +534,7 @@ private
     end
     alias_method :usage, :o
     def run argv=ARGV
+      @argv_hook.call(argv) if @argv_hook
       argv = argv.dup # never change caller's array
       return @ui.err.puts('run disabled. (probably for gentesting)') unless
         OptparseLite.run_enabled?
@@ -535,6 +544,9 @@ private
         @instance = obj
       end
       @instance.run argv
+    end
+    def set_argv_hook &hook
+      @argv_hook = hook
     end
     def subcommands *a
       @spec.subcommands(*a)
