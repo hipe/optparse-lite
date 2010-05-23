@@ -6,12 +6,21 @@ margin-right:auto;
 width:800px;
 }
 */
+#blah1{
+width: 600px;
+}
+#blah2{
+width: 600px;
+}
 code {
 font-size:14px;
 }
 .ruby {
+-moz-border-radius:0.6em 0.6em 0.6em 0.6em;
+-webkit-border-radius: 7px;
 background:none repeat scroll 0 0 #111122;
 color:#228822;
+margin:0 0 0.5em;
 padding:10px;
 /*width:800px;*/
 }
@@ -78,6 +87,8 @@ background:none repeat scroll 0 0 #111122;
 color:#AFE793; /* this is pale green*/
 margin:0 0 0.5em 0;
 padding:10px;
+-moz-border-radius:0.6em 0.6em 0.6em 0.6em;
+-webkit-border-radius: 7px;
 /*width:800px;*/
 }
 .terminal .prompt { /* same as 'green' below */
