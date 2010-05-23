@@ -30,7 +30,19 @@ PassThru.each do |x|
   end
 end
 
-# removed some crazy logic in 4189c
+
+compile "/high-concept/" do
+  filter :nandoc
+  filter :erb
+  filter :kramdown
+  filter :nandoc_no_entities
+  layout 'default'
+end
+
+# this one has svg graphics
+route '/high-concept/' do
+  '/high-concept/index.xml'
+end
 
 compile '*' do
   filter :nandoc
