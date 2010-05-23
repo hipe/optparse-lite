@@ -1,8 +1,7 @@
 require 'rake/testtask.rb'
 require File.expand_path('../lib/optparse-lite.rb', __FILE__)
 require File.expand_path('../lib/optparse-lite/test/gentest/tasks', __FILE__)
-require 'nandoc' # RcovAgent, ParseReadme
-
+require 'nandoc/extras/rcov-task'
 
 task :default => :test
 
@@ -38,16 +37,17 @@ end
 
 me = "\e[35mopl\e[0m "
 
-teh_file = './.last-rcov'
-desc "#{me}generate rcov coverage, write to #{teh_file}"
-task :rcov do
-  require File.dirname(__FILE__)+'/lib/optparse-lite/test/nandoc-extlib'
-  agent = NanDoc::RcovAgent.new do |ag|
-    output_dir 'mysite/output/coverage'
-    input_file 'test/test.rb'
-  end
-  agent.run
+desc "#{me}put rcov coverage html docs into mysite/output"
+NanDoc::RcovTask.new(:rcov) do |t|
+  t.test_files = FileList['test/test*.rb']
+  t.verbose = true
+  t.rcov_opts << "--text-report"
+  t.rcov_opts << "--exclude '.*gem.*'"
+  t.rcov_opts << "--exclude '.*treebis*'"
+  t.rcov_opts << "--include-file 'optparse-lite/lib'"
+  t.output_dir = 'mysite/output/coverage'
 end
+
 
 desc "#{me}hack turns the installed gem into a symlink to this directory"
 task :hack do
