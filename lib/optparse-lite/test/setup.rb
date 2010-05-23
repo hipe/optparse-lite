@@ -1,23 +1,13 @@
 require 'minitest/autorun'
-require 'nandoc/test/minitest-extlib'
+require 'optparse-lite'
+require 'nandoc/spec-doc'
 
-
-# hack to turn off randomness, for running the simplest
-# test cases first
-if (idx = ARGV.index('--seed')) && '0'==ARGV[idx+1]
-  class MiniTest::TestCase
-    def test_order
-      :alpha
-    end
-  end
-end
-
-# core extensions just for tests!
-class String
-  def noindent n=nil
-    n ||= /\A *(?! )/.match(self)[0].length
-    s = gsub(/^ {#{n}}/, '')
-    s
+NanDoc::SpecDoc::Playback::Method.handlers[:optparse_app_module] = [:skip]
+NanDoc::SpecDoc::GenericAgent.custom_spec_hook(:grab_optparse_app) do
+  recordings.add(:optparse_app_module, :placeholder)
+  record = recordings[recordings.length - 1]
+  ::OptparseLite.after_included_once do |mod|
+    record[1] = mod
   end
 end
 
@@ -41,14 +31,25 @@ module OptparseLite
         end
         def capture app=nil, &b
           app ||= @application_module
+          do_record = @spec && @spec.respond_to?(:nandoc)
           ui = app.send(:ui)
           ui.push
+          if do_record
+            app.set_argv_hook do |argv|
+              @spec.nandoc.recordings.add(:app, app)
+              @spec.nandoc.recordings.add(:argv, argv)
+            end
+          end
           @last_return_value = app.instance_eval(&b)
           str = ui.pop.to_str # tacitly assumes stderr is empty, breaks else
+          if do_record
+            @spec.nandoc.recordings.add(:out, str)
+          end
           $stdout.puts "\n\n#{str}\n" if Test.verbose
           str
         end
         def capture2 app=nil, &b
+          do_record = @spec && @spec.respond_to?(:nandoc)
           app ||= @application_module
           ui = app.send(:ui)
           ui.push
@@ -58,6 +59,12 @@ module OptparseLite
           if Test.verbose
             $stdout.puts "\n\nout:\n#{out}\n."
             $stdout.puts "\n\nerr:\n#{out}\n."
+          end
+          if do_record
+            if ""!=out && ""!=err
+              fail("don't be a dick")
+            end
+            @spec.nandoc.recordings.add(:out, out + err)
           end
           [out, err]
         end
@@ -70,6 +77,7 @@ module OptparseLite
         end
         def init_fork spec
           @application_module = get_app_from_spec(spec)
+          @spec = spec # this has nandoc
         end
         def fork thing
           ret = dup
@@ -98,6 +106,26 @@ module OptparseLite
   end
 end
 
+# core extensions just for tests!
+class String
+  def noindent n=nil
+    n ||= /\A *(?! )/.match(self)[0].length
+    s = gsub(/^ {#{n}}/, '')
+    s
+  end
+end
+
 if ARGV.include? '-v'
   OptparseLite::Test.verbose = true
+end
+
+# hack to turn off randomness, for running the simplest
+#   test cases first
+#
+if (idx = ARGV.index('--seed')) && '0'==ARGV[idx+1]
+  class MiniTest::TestCase
+    def test_order
+      :alpha
+    end
+  end
 end
