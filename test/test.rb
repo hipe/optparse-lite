@@ -1,19 +1,32 @@
-require File.expand_path('../../lib/optparse-lite.rb', __FILE__)
-require File.expand_path('../../lib/optparse-lite/test/setup.rb', __FILE__)
+require 'optparse-lite/test/setup'
 
 # wierd bug!!!  ruby test/test.rb --seed 3611
 
 module OptparseLite::Test
 
   include OptparseLite::Test::Capture
+  NanDoc::SpecDoc.include_to(class << self; self end)
 
+  nandoc.story 'empty app'
+  nandoc.grab_optparse_app
+  nandoc.record_ruby
+  #!/usr/bin/env ruby
+
+  require 'optparse-lite'
   class Empty
     include OptparseLite
   end
+  nandoc.record_ruby_stop
+
+  nandoc.story_stop
+
   Empty.spec.invocation_name = "empty-app.rb"
 
   describe Empty do
+    include NanDoc::SpecDoc
+
     it 'empty-app.rb must work' do
+      nandoc.record
       exp = <<-HERE.noindent
         \e[32;mUsage:\e[0m empty-app.rb (this screen. no commands defined.)
       HERE
@@ -31,22 +44,31 @@ module OptparseLite::Test
   end
 
 
+  nandoc.story 'one meth'
+  nandoc.grab_optparse_app
+  nandoc.record_ruby
   class OneMeth
     include OptparseLite
-    def bar; 'done' end
+    def bar
+      ui.puts 'done!'
+    end
   end
+  nandoc.record_ruby_stop
+  nandoc.story_stop
   OneMeth.spec.invocation_name = "one-meth-app.rb"
 
   describe OneMeth do
+    include NanDoc::SpecDoc
 
     it 'one-meth-app.rb runs' do
-      assert_equal('done', OneMeth.run(['bar']))
+      nandoc.record
+      out = capture{ run ['bar'] }
+      assert_equal "done!\n", out
     end
 
 
-    it "one-meth-app.rb works like help
-      when the command is not found.
-    " do
+    it "one-meth-app.rb works like help when the command is not found" do
+      nandoc.record
       exp = <<-HERE.noindent
         i don't know how to \e[32;mbazzle\e[0m.
         try \e[32;mone-meth-app.rb\e[0m \e[32;m-h\e[0m for help.
@@ -57,6 +79,7 @@ module OptparseLite::Test
 
 
     it 'one-meth-app.rb ask for help must work' do
+      nandoc.record
       exp = <<-HERE.noindent
         \e[32;mUsage:\e[0m one-meth-app.rb (bar) [<opts>] [<args>]
 
@@ -102,6 +125,7 @@ module OptparseLite::Test
 
 
     it 'one-meth-app.rb ask for help full match must work' do
+      nandoc.record
       exp = <<-HERE.noindent
         \e[32;mUsage:\e[0m one-meth-app.rb bar
       HERE
@@ -110,6 +134,10 @@ module OptparseLite::Test
     end
   end
 
+
+  nandoc.story 'persistent'
+  nandoc.grab_optparse_app
+  nandoc.record_ruby
   class PersistentService
     include OptparseLite
     def initialize
@@ -120,12 +148,15 @@ module OptparseLite::Test
       ui.puts "i have pinged #{@num} times"
     end
   end
+  nandoc.record_ruby_stop
+  nandoc.story_stop
   PersistentService.spec.invocation_name = "persistent-service-app.rb"
 
   describe PersistentService do
-    it "persistent-service-app.rb will use the same object
-    each time it fulfills a request.
-    " do
+    include NanDoc::SpecDoc
+
+    it 'persistent-service-app.rb multiple requests' do
+      nandoc.record
       exp = <<-HERE.noindent
         i have pinged 1 times
       HERE
@@ -139,14 +170,22 @@ module OptparseLite::Test
     end
   end
 
+  nandoc.story 'neg arity'
+  nandoc.grab_optparse_app
+  nandoc.record_ruby
   class OneMethWithNegArity
     include OptparseLite
     def bar(*a); end
   end
+  nandoc.record_ruby_stop
+  nandoc.story_stop
   OneMethWithNegArity.spec.invocation_name = "one-meth-with-neg-arity-app.rb"
 
   describe OneMethWithNegArity do
+    include NanDoc::SpecDoc
+
     it 'one-meth-with-neg-arity-app.rb must work' do
+      nandoc.record
       exp = <<-HERE.noindent
         \e[32;mUsage:\e[0m one-meth-with-neg-arity-app.rb (bar) [<opts>] [<args>]
 
@@ -167,6 +206,8 @@ module OptparseLite::Test
   OneMethWithPosArity.spec.invocation_name = "one-meth-with-pos-arity-app.rb"
 
   describe OneMethWithPosArity do
+    include NanDoc::SpecDoc
+
     it 'one-meth-with-pos-arity-app.rb must work' do
       exp = <<-HERE.noindent
         \e[32;mUsage:\e[0m one-meth-with-pos-arity-app.rb (bar) [<opts>] [<args>]
@@ -180,7 +221,9 @@ module OptparseLite::Test
     end
   end
 
-
+  nandoc.story 'one meth desc'
+  nandoc.grab_optparse_app
+  nandoc.record_ruby
   class OneMethDesc
     include OptparseLite
 
@@ -189,10 +232,15 @@ module OptparseLite::Test
     desc "this is for barring"
     def bar; end
   end
+  nandoc.record_ruby_stop
+  nandoc.story_stop
   OneMethDesc.spec.invocation_name = "one-meth-desc-app.rb"
 
   describe OneMethDesc do
+    include NanDoc::SpecDoc
+
     it 'one-meth-desc-app.rb must work' do
+      nandoc.record
       exp = <<-HERE.noindent
         \e[32;mUsage:\e[0m one-meth-desc-app.rb (bar) [<opts>] [<args>]
           when u wanna have a good time
@@ -205,6 +253,7 @@ module OptparseLite::Test
       assert_no_diff(exp, act)
     end
     it 'one-meth-desc-app.rb ask for help must work' do
+      nandoc.record
       exp = <<-HERE.noindent
         \e[32;mUsage:\e[0m one-meth-desc-app.rb bar
         \e[32;mDescription:\e[0m this is for barring
@@ -214,15 +263,25 @@ module OptparseLite::Test
     end
   end
 
+
+  nandoc.story 'one meth usage'
+  nandoc.grab_optparse_app
+  nandoc.record_ruby
   class OneMethUsage
     include OptparseLite
     usage "<paint> <ball>"
     def bar a, b; end
   end
+  nandoc.record_ruby_stop
+  nandoc.story_stop
+
   OneMethUsage.spec.invocation_name = "one-meth-usage-app.rb"
 
   describe OneMethUsage do
+    include NanDoc::SpecDoc
+
     it 'one-meth-usage-app.rb must work' do
+      nandoc.record
       exp = <<-HERE.noindent
         \e[32;mUsage:\e[0m one-meth-usage-app.rb (bar) [<opts>] [<args>]
 
@@ -235,6 +294,10 @@ module OptparseLite::Test
     end
   end
 
+
+  nandoc.story 'three meth'
+  nandoc.grab_optparse_app
+  nandoc.record_ruby
   class ThreeMeth
     include OptparseLite
     def foo; end
@@ -243,12 +306,15 @@ module OptparseLite::Test
     desc "faz line two"
     def faz; end
   end
-  ThreeMeth.spec.invocation_name = "three-meth-app.rb"
+  nandoc.record_ruby_stop
+  nandoc.story_stop
   ThreeMeth.spec.invocation_name = "three-meth-app.rb"
 
   describe ThreeMeth do
+    include NanDoc::SpecDoc
 
     it 'three-meth-app.rb no args must work' do
+      nandoc.record
       exp = <<-HERE.noindent
         \e[32;mUsage:\e[0m three-meth-app.rb (foo|bar|faz) [<opts>] [<args>]
 
@@ -263,6 +329,7 @@ module OptparseLite::Test
     end
 
     it 'three-meth-app.rb help requested command not found must work' do
+      nandoc.record
       exp = <<-HERE.noindent
         i don't know how to \e[32;mska\e[0m.
         try \e[32;mthree-meth-app.rb\e[0m \e[32;m-h\e[0m for help.
@@ -271,7 +338,8 @@ module OptparseLite::Test
       assert_no_diff(exp, act)
     end
 
-    it 'three-meth-app.rb help requested partial match must work' do
+    it 'three-meth-app.rb help requested partial match must work 1' do
+      nandoc.record
       exp = <<-HERE.noindent
         did you mean \e[32;mfoo\e[0m or \e[32;mfaz\e[0m?
         try \e[32;mthree-meth-app.rb\e[0m \e[32;m-h\e[0m for help.
@@ -280,7 +348,8 @@ module OptparseLite::Test
       assert_no_diff(exp, act)
     end
 
-    it 'three-meth-app.rb help requestsed on command with desc must work' do
+    it 'three-meth-app.rb help requested partial match must work 2' do
+      nandoc.record
       exp = <<-HERE.noindent
         \e[32;mUsage:\e[0m three-meth-app.rb faz
         \e[32;mDescription:\e[0m
@@ -293,6 +362,8 @@ module OptparseLite::Test
   end
 
   describe OptparseLite::OptsLike do
+    include NanDoc::SpecDoc
+
     it "ops must be OptsLike" do
       e = assert_raises(RuntimeError) do
         class BadOpts
@@ -327,6 +398,8 @@ module OptparseLite::Test
   CmdWithOpts.spec.invocation_name = "cmd-with-opts-app.rb"
 
   describe CmdWithOpts do
+    include NanDoc::SpecDoc
+
     it 'cmd-with-opts-app.rb must work with stub' do
       exp = <<-HERE.noindent
         \e[32;mUsage:\e[0m cmd-with-opts-app.rb (foo) [<opts>] [<args>]
@@ -350,7 +423,9 @@ module OptparseLite::Test
     end
   end
 
-
+  nandoc.story 'more usage'
+  nandoc.grab_optparse_app
+  nandoc.record_ruby
   class CovPatch
     include OptparseLite
 
@@ -362,11 +437,16 @@ module OptparseLite::Test
     def useless_interpolate a1, a2
     end
   end
+  nandoc.record_ruby_stop
+  nandoc.story_stop
+
   CovPatch.spec.invocation_name = "cov-patch-app.rb"
 
   describe CovPatch do
+    include NanDoc::SpecDoc
 
     it 'cov-patch-app.rb displays wierd usage (no validation!?)' do # @todo
+      nandoc.record
       exp = <<-HERE.noindent
         \e[32;mUsage:\e[0m cov-patch-app.rb wierd-usage [-blah -blah] <blah1> <blah2>
       HERE
@@ -376,6 +456,7 @@ module OptparseLite::Test
 
 
     it 'cov-patch-app.rb interpolates args for no reason' do
+      nandoc.record
       exp = <<-HERE.noindent
         \e[32;mUsage:\e[0m cov-patch-app.rb useless-interpolate -one -opt -another <arg1> <arg2>
       HERE
@@ -415,6 +496,8 @@ module OptparseLite::Test
   BannerTime.spec.invocation_name = "banner-time-app.rb"
 
   describe BannerTime do
+    include NanDoc::SpecDoc
+
     it 'banner-time-app.rb must work' do
       exp = <<-HERE.noindent
         \e[32;mUsage:\e[0m banner-time-app.rb fix-desc [--foo, -Bar] [-foobric] [--stanley] [-a,-b] <arg1> [<arg2>]
@@ -435,6 +518,8 @@ module OptparseLite::Test
 
 
   describe OptparseLite::OptParser do
+    include NanDoc::SpecDoc
+
     it "must fail on no mames param" do
       e = assert_raises(RuntimeError) do
         OptparseLite::OptParser.new{
@@ -446,6 +531,9 @@ module OptparseLite::Test
   end
 
 
+  nandoc.story 'finally'
+  nandoc.grab_optparse_app
+  nandoc.record_ruby
   class Finally
     include OptparseLite
 
@@ -463,11 +551,16 @@ module OptparseLite::Test
 
     end
   end
+  nandoc.record_ruby_stop
+  nandoc.story_stop
   Finally.spec.invocation_name = "finally-app.rb"
 
   describe Finally do
 
+    include NanDoc::SpecDoc
+
     it 'finally-app.rb general help' do
+      nandoc.record
       exp = <<-HERE.noindent
         \e[32;mUsage:\e[0m finally-app.rb (do-it) [<opts>] [<args>]
 
@@ -480,6 +573,7 @@ module OptparseLite::Test
     end
 
     it 'finally-app.rb command help' do
+      nandoc.record
       exp = <<-HERE.noindent
         \e[32;mUsage:\e[0m finally-app.rb do-it [--alpha,-a] [--beta,-b=<foo>] [--gamma[=<baz>]] [--[no-]mames] <arg1> [<arg2>]
         \e[32;mFun Options:\e[0m
@@ -497,6 +591,7 @@ module OptparseLite::Test
     end
 
     it 'finally-app.rb complains on optparse errors' do
+      nandoc.record
       exp_out = <<-HERE.noindent
       HERE
       exp_err = <<-HERE.noindent
@@ -530,6 +625,8 @@ module OptparseLite::Test
   Raiser.spec.invocation_name = "raiser-app.rb"
 
   describe Raiser do
+    include NanDoc::SpecDoc
+
 
     it 'lets application level argument errors thru' do
       e = assert_raises(ArgumentError) do
@@ -561,6 +658,8 @@ module OptparseLite::Test
   end
 
   describe OptparseLite::Np do
+    include NanDoc::SpecDoc
+
     it "fails on this" do
       e = assert_raises(RuntimeError) do
         OptparseLite::Np.new(:the,'thing'){}
@@ -573,6 +672,10 @@ module OptparseLite::Test
     end
   end
 
+
+  nandoc.story 'agg opts'
+  nandoc.grab_optparse_app
+  nandoc.record_ruby
   class AggOpts
     include OptparseLite
     opts {
@@ -593,10 +696,15 @@ module OptparseLite::Test
       ui.puts resp.inspect
     end
   end
+  nandoc.record_ruby_stop
+  nandoc.story_stop
   AggOpts.spec.invocation_name = "agg-opts-app.rb"
 
   describe AggOpts do
+    include NanDoc::SpecDoc
+
     it 'agg-opts-app.rb help display' do
+      nandoc.record
       exp = <<-HERE.noindent
         \e[32;mUsage:\e[0m agg-opts-app.rb go-with-it [--alpha,-a] [-b] [--gamma,-g=<foo>] [--delta,-d] <arg1> [<arg2>]
         \e[32;mAlpha Options:\e[0m
@@ -613,6 +721,7 @@ module OptparseLite::Test
     end
 
     it 'agg-opts-app.rb opt validation' do
+      nandoc.record
       exp_out = <<-HERE.noindent
       HERE
       exp_err = <<-HERE.noindent
@@ -628,6 +737,7 @@ module OptparseLite::Test
     end
 
     it 'agg-opts-app.rb must work' do
+      nandoc.record
       exp = <<-HERE.noindent
         [[:b, \"heh but it's argless\"], [:first_arg, \"foo\"], [:gamma, \"great gams\"], [:second_arg, nil]]
       HERE
@@ -636,6 +746,9 @@ module OptparseLite::Test
     end
   end
 
+  nandoc.story 'sub'
+  nandoc.grab_optparse_app
+  nandoc.record_ruby
   class Sub
     include OptparseLite
 
@@ -673,10 +786,15 @@ module OptparseLite::Test
     def foo_frac
     end
   end
+  nandoc.record_ruby_stop
+  nandoc.story_stop
   Sub.spec.invocation_name = "sub-app.rb"
 
   describe Sub do
+    include NanDoc::SpecDoc
+
     it 'sub-app.rb with command with no arg shows subcommand list' do
+      nandoc.record
       exp = <<-HERE.noindent
         \e[32;mUsage:\e[0m sub-app.rb foo (fric|bric-dic|frac) [<opts>] [<args>]
 
@@ -692,6 +810,7 @@ module OptparseLite::Test
       assert_no_diff(exp, act)
     end
     it 'sub-app.rb shows help on sub-command' do
+      nandoc.record
       exp = <<-HERE.noindent
         \e[32;mUsage:\e[0m sub-app.rb foo fric [-f] <crank-harder>
         \e[32;mDescription:\e[0m crank harder
@@ -701,6 +820,7 @@ module OptparseLite::Test
       assert_no_diff(exp, act)
     end
     it 'sub-app.rb must work' do
+      nandoc.record
       exp = <<-HERE.noindent
         [[\"arg\", \"frak\"], [\"method\", :foo_fric]]
       HERE
@@ -737,6 +857,8 @@ module OptparseLite::Test
   Mod.spec.invocation_name = "mod-app.rb"
 
   describe Mod do
+    include NanDoc::SpecDoc
+
     it 'mod-app.rb must work' do
       exp = <<-HERE.noindent
         rock on new york rock on chicago
@@ -802,6 +924,8 @@ module OptparseLite::Test
   ForeignParser.spec.invocation_name = "foreign-parser-app.rb"
 
   describe ForeignParser do
+    include NanDoc::SpecDoc
+
     it '"foreign-parser-app.rb -h" lists commands' do
       exp = <<-HERE.noindent
         \e[32;mUsage:\e[0m foreign-parser-app.rb foo [-h] [-v]
