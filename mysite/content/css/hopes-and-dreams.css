@@ -1,0 +1,274 @@
+.crazy-pic .caption{
+  font-style:italic;
+  padding-top:0.25em;
+  text-align:center;
+}
+#fig-1{
+  width:60%;
+  float: right;
+  margin-left:0.5em;
+  position: relative;
+}
+#fig-1 .wrap-1{
+  width: 100%;
+}
+#fig-1 .wrap-2{
+  width:100%;
+  height: 100px;
+  left: 0;
+  top: 0;
+  border:2px solid #777777;
+  -moz-border-radius: 6px;
+  -webkit-border-radius: 6px;
+  padding: 0;
+  position: relative;
+}
+#fig-1 .backlay{
+  height: 100px;
+  position:absolute;
+  top:0;
+  width:100%;
+  z-index:-1;
+}
+#fig-1 .backlay .embo{
+  border: 1px solid red;
+  /* safari compat, dimensions in image must be absolute. */
+}
+#fig-1 .box{
+  -moz-border-radius:6px 6px 6px 6px;
+  -webkit-border-radius:6px;
+  border:2px solid #777777;
+  background: #CCEEFF;
+  font-size: 1.5em;
+  height:46%;
+  position:absolute;
+  text-align:center;
+  top:25%;
+  width:28%;
+}
+#fig-1 .box .label{
+  position:absolute;
+  top:18%;
+  width:100%;
+}
+#fig-1 .you{
+  left: 10px;
+}
+#fig-1 .opl{
+  right: 10px;
+}
+#fig-2 {
+  -moz-border-radius:6px 6px 6px 6px;
+  -webkit-border-radius:6px;
+  border: 2px solid #777777;
+  margin:0 0 1em;
+  position: relative;
+}
+#fig-2 h3 {
+  margin:0.5em 0 0;
+  padding:0;
+  text-align:center;
+}
+#fig-2 h4 {
+  margin:0;
+  padding:0;
+  text-align:center;
+}
+#fig-2 .left-col, #fig-2 .right-col, #fig-2 .mid-col {
+  float: left;
+  height: 600px;
+  position: relative;
+  width: 142px;
+}
+#fig-2 .arrow-left {
+  width: 20px;
+  height: 30px;
+}
+#fig-2 .arrow-right {
+  width: 20px;
+  height: 30px;
+}
+#fig-2 .left-col {
+  left: 0px;
+}
+#fig-2 .mid-col {
+  left: 0px;
+}
+#fig-2 .right-col {
+  left: 0px;
+}
+#fig-2 .square {
+  margin:0 0 0.5em;
+  padding:10px;
+  position: absolute;
+  width: 120px;
+}
+#fig-2 .ruby {
+  -webkit-border-radius:6px;
+  -moz-border-radius:6px 6px 6px 6px;
+  background:none repeat scroll 0 0 #FF99EE;
+  border:2px solid #777777;
+  color:#003300;
+  font-family:monospace;
+}
+#fig-2 .app {
+  -webkit-border-radius:6px;
+  -moz-border-radius:6px 6px 6px 6px;
+  background:none repeat scroll 0 0 #CCEEFF;
+  border:2px solid #777777;
+  color:#003300;
+  font-family:monospace;
+}
+#fig-2 .dubs {
+  height: 30px;
+}
+#fig-2 .short {
+  height: 14px;
+}
+#fig-2 .mod {
+  top: 0px;
+}
+#fig-2 .meth {
+  top: 67px;
+}
+#fig-2 .param {
+  top: 134px;
+}
+#fig-2 .opts {
+  left:37px;
+  top:219px;
+  width:88px;
+}
+#fig-2 .opt {
+  left:108px;
+  top:285px;
+  width:24px;
+  padding: 10px 5px 10px 5px;
+}
+#fig-2 .switch {
+  left:74px;
+  padding:10px 5px;
+  top:380px;
+  width:46px;
+}
+#fig-2 .pr {
+  left:0;
+  padding:10px 5px;
+  top:446px;
+  width:120px;
+}
+#fig-2 .po {
+  left:0;
+  padding:10px 5px;
+  top:498px;
+  width:120px;
+}
+#fig-2 .trail {
+  top: 285px;
+  width: 71px;
+}
+#fig-2 .splat {
+  top: 380px;
+  width: 40px;
+}
+#fig-2 .snack-wrap {
+  position: relative;
+  left: 30px;
+  top: 10px;
+  width: 432px;
+}
+#fig-2 .backlay {
+  width: 100%;
+  height: 600px;
+  z-index: -1;
+  position: absolute;
+  /*background: gray;*/
+  top: 0px;
+  left: 0px;
+}
+#fig-2 .expl {
+  color:#555555;
+  font-size:0.85em;
+  font-style:italic;
+  position:absolute;
+}
+#fig-2 .arc-1 {
+  left:82px;
+  top:44px;
+}
+#fig-2 .arc-2 {
+  left:82px;
+  top:111px;
+}
+#fig-2 .arc-3 {
+  left:99px;
+  top:200px;
+}
+#fig-2 .arc-4 {
+  left:23px;
+  top:265px;
+}
+#fig-2 .arc-5 {
+  left:27px;
+  top:360px;
+}
+#fig-2 .arc-21 {
+  top:46px;
+}
+#fig-2 .arc-22 {
+  top:112px;
+}
+#fig-2 .arc-23 {
+  left:21px;
+  top:266px;
+}
+#fig-2 .arc-24 {
+  left:72px;
+  top:197px;
+}
+#fig-2 .arc-26 {
+  left:38px;
+  top:358px;
+}
+#fig-2 .iso {
+  left:23px;
+  position:absolute;
+}
+#fig-2 .iso .m{
+  background:none repeat scroll 0 0 #BBFFBB;
+  border-bottom:2px solid green;
+  border-top:2px solid green;
+  color:#555555;
+  height: 15px; /* safari must use ff height for arrow head lineup */
+  float:left;
+  font-size:0.85em;
+  font-style:italic;
+  position: relative;
+  top: 6px;
+}
+#fig-2 .iso-1 {
+  top: 2px;
+}
+#fig-2 .iso-2 {
+  top: 67px;
+}
+#fig-2 .iso-3 {
+  top: 142px;
+}
+#fig-2 .iso-4 {
+  top: 219px;
+}
+#fig-2 .iso-5 {
+  top: 300px;
+}
+#fig-2 .iso-6 {
+  top: 384px;
+}
+#fig-2 .iso .l{
+  float: left;
+  /* background:#ffbbbb; fun to see */
+}
+#fig-2 .iso .r{
+  float: right;
+  /* background:#ffbbbb; fun to see */
+}
