@@ -2120,6 +2120,10 @@ try {
 
 	// Check to see if an attribute returns normalized href attributes
 	div.innerHTML = "<a href='#'></a>";
+	if ( ! div.firstChild.getAttribute ) {
+	  // fix for working with xml files? nandoc
+	  return;
+	}
 	if ( div.firstChild.getAttribute("href") !== "#" ) {
 		Expr.attrHandle.href = function(elem){
 			return elem.getAttribute("href", 2);
@@ -2991,6 +2995,9 @@ jQuery( window ).bind( 'unload', function(){
 		div = document.createElement("div"),
 		id = "script" + (new Date).getTime();
 
+if ( ! div.style ) {
+  return; // fix for nandoc xml
+}
 	div.style.display = "none";
 	div.innerHTML = '   <link/><table></table><a href="/a" style="color:red;float:left;opacity:.5;">a</a><select><option>text</option></select><object><param/></object>';
 
