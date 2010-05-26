@@ -3,7 +3,7 @@ module OptparseLite
   class AppTag < ::NanDoc::Filters::CustomTag
     ::NanDoc::Filters::CustomTags.register_class(self)
     include NanDoc::SpecDoc::Playback::Terminal::ColorToHtml
-    include MyStringMethods
+    include NanDoc::StringMethods # module_basename
     ColorizeRuby = ::Syntax::Convertors::HTML.for_syntax('ruby')
 
     class << self
