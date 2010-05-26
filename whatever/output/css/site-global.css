@@ -1,0 +1,36 @@
+* {
+  margin: 0;
+  padding: 0;
+}
+a {
+  text-decoration: none;
+  color: #000;
+}
+a:hover {
+  text-decoration: none;
+  color: #777777;
+}
+a:visited {
+  text-decoration: none;
+  color: #444444;
+}
+#main {
+  margin: 1em;
+  padding: 1em;
+  width: 500px;
+}
+p {
+  margin: 1em;
+}
+.table-1 {
+  border-collapse: collapse;
+}
+.table-1 td {
+  border: 1px solid gray;
+  padding: 0 1em;
+}
+.table-1 th {
+  border: 1px solid gray;
+  padding: 0 1em;
+  text-align: left;
+}

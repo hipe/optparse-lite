@@ -1,0 +1,30 @@
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta charset="utf-8" />
+    <title>jquery xml test</title>
+    <link rel="stylesheet" type="text/css" href="/css/site-global.css" media="screen" />
+  </head>
+  <body>
+    <div id='main'>
+      <p><em>
+        these are little tests to see if jquery- and jquery-ui-related
+        things will work on xhml documents
+      </em></p>
+      <br />
+      <table class='table-1'>
+        <tr>
+          <th>jquery-1.4.2.js</th>
+          <td>
+            <a href='/drag-1.4.2-dist.xml'>draggable</a>
+          </td>
+        </tr>
+        <tr>
+          <th>jquery-1.4.3-HEAD.js</th>
+          <td>
+            <a href='/drag-1.4.3-head.xml'>draggable</a>
+          </td>
+        </tr>
+      </table>
+    </div>
+  </body>
+</html>

@@ -1,0 +1,4 @@
+index_filenames: [ 'index.html', 'index.xml']
+deploy:
+  default:
+    dst: hipeland.org:/var/sites/whatever.hipeland.org

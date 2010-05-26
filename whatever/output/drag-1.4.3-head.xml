@@ -1,0 +1,25 @@
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta charset="utf-8" />
+    <title>1.4.3 draggable</title>
+    <link rel="stylesheet" type="text/css" href="/css/site-global.css" media="screen" />
+    <script src="/js/jquery-1.4.3.pre.js" type="text/javascript"></script>
+    <script src="/js/drag-test.js" type="text/javascript"></script>
+  </head>
+  <body>
+    <div id='main'>
+      <p>
+        <em><a href='/index.xml'>&#60;- back to tests</a></em>
+      </p>
+      <p>
+        this is to test jquery 1.4.3 pre with xhtml documents
+      </p>
+      <p>
+        if jquery loaded successfully you would have seen a dialog box popup when this page loaded.
+      </p>
+      <p>
+        if you are looking at this with firebug turned on you may see some errors.
+      </p>
+    </div>
+  </body>
+</html>
