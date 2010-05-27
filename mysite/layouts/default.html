@@ -2,19 +2,22 @@
   <head>
     <meta charset="utf-8" />
     <title>hipeland - opl - <%= @item.nandoc_title %></title>
-    <link rel="stylesheet" type="text/css" href="/css/nanoc-dist-altered.css" media="screen" />
-    <link rel="stylesheet" type="text/css" href="/css/trollop-subset.css" media="screen" />
-    <% if item.attributes[:stylesheet]
-      use_name = item.attributes[:stylesheet]
-      use_name = "#{File.basename(item.path)}\.css" if use_name == 'self'
-      use_name = "#{use_name}\.css" unless /\.css\Z/ =~ use_name
+    <%
+      linky_agent.stylesheets(%w(
+        /css/nanoc-dist-altered.css
+        /css/trollop-subset.css
+      )).each do |src|
     %>
-    <link rel="stylesheet" type="text/css" href="/css/<%= use_name %>" media="screen" />
-    <% end %>
+      <link rel="stylesheet" type="text/css" href="<%= src %>" media="screen" /><% end %>
 
-    <script type="text/javascript" src="/vendor/jquery-1.3.js"></script>
-    <script type="text/javascript" src="/vendor/jquery.easing.1.3.js"></script>
-    <script type="text/javascript" src="/js/menu-bouncy.js"></script>
+    <%
+     linky_agent.javascripts(%w(
+      /vendor/jquery-1.3.js
+      /vendor/jquery.easing.1.3.js
+      /js/menu-bouncy.js
+    )).each do |src|
+    %>
+      <script src="<%= src %>" type="text/javascript"></script><% end %>
     <meta name="generator" content="nanoc 3.1.2" />
   </head>
   <body>
