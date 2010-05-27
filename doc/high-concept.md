@@ -1,5 +1,15 @@
 ---
-stylesheet: hopes-and-dreams
+stylesheets: hopes-and-dreams
+
+javascripts:
+  - /vendor/jquery-current/dist/jquery.js
+  - /vendor/jquery-ui/ui/jquery.ui.core.js
+  - /vendor/jquery-ui/ui/jquery.ui.widget.js
+  - /vendor/jquery-ui/ui/jquery.ui.mouse.js
+  - /vendor/jquery-ui/ui/jquery.ui.draggable.js
+  - self
+
+javascripts-off: [/vendor/jquery-1.3.js]
 ---
 # optparse-lite
 
