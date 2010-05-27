@@ -29,6 +29,9 @@ p {
   border: 1px solid gray;
   padding: 0 1em;
 }
+.table-1 td.ans {
+  /*text-decoration: italic;*/
+}
 .table-1 th {
   border: 1px solid gray;
   padding: 0 1em;
