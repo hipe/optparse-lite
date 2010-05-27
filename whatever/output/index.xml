@@ -8,20 +8,62 @@
     <div id='main'>
       <p><em>
         these are little tests to see if jquery- and jquery-ui-related
-        things will work on xhml documents
+        things will work on xhtml documents with svg-embedded images
       </em></p>
       <br />
       <table class='table-1'>
         <tr>
-          <th>jquery-1.4.2.js</th>
-          <td>
-            <a href='/drag-1.4.2-dist.xml'>draggable</a>
+          <th>question</th>
+          <th>answer?</th>
+        </tr>
+        <tr>
+          <td class='q'>
+            <a href='/svg-inline-in-html5.html'>
+              can we embed an svg <em>inline</em> in an html5?
+            </a>
+          </td>
+          <td class='ans'>
+            no
           </td>
         </tr>
         <tr>
-          <th>jquery-1.4.3-HEAD.js</th>
+          <td class='q'>
+            <a href='/drag-1.4.2-dist.xml'>
+              will jquery-1.4.2 work on this xhtml-like document?
+            </a>
+          </td>
+          <td class='ans'>
+            no
+          </td>
+        </tr>
+        <tr>
+          <td class='q'>
+            <a href='/drag-1.4.3-head.xml'>
+              will jquery-1.4.3-HEAD.js work on this xhtml-like document?
+            </a>
+          </td>
           <td>
-            <a href='/drag-1.4.3-head.xml'>draggable</a>
+            no
+          </td>
+        </tr>
+        <tr>
+          <td class='q'>
+            <a href='/svg-ok.xml'>
+              can we embed an svg <em>inline</em> in an xhtml doc served as xml?
+            </a>
+          </td>
+          <td class='ans'>
+            yes (ff3/safari)
+          </td>
+        </tr>
+        <tr>
+          <td class='q'>
+            <a href='/sadface.xml'>
+              will jquery-1.4.3-pre-hact.js work on an xhtml-like document?
+            </a>
+          </td>
+          <td class='ans'>
+            yes (ff3/safari)
           </td>
         </tr>
       </table>
