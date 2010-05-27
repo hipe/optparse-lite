@@ -19,6 +19,9 @@ index_filenames: [ 'index.html', 'index.xml']
 # before and after the last site compilation.
 enable_output_diff: false
 
+deploy:
+  default:
+    dst: hipeland.org:/var/sites/optparse-lite.hipeland.org
 
 # nanDoc: here is an example deployment config node.
 # uncomment this, get it right, and try
