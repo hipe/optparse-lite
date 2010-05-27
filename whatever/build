@@ -25,7 +25,6 @@ task = Treebis::Task.new do
       system(cmd)
     end
   end
-  debugger
   copy build_dir+'/dist/jquery.js', './output/js/jquery-1.4.3.pre.js'
   notice "donezoorz", ''
 end
