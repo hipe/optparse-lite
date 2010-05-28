@@ -2,11 +2,12 @@
 stylesheets: hopes-and-dreams
 
 javascripts:
-  - /vendor/jquery-current/dist/jquery.js
+# - /vendor/jquery-current/dist/jquery.js
+  - /js/jquery-1.4.3.pre-hack-me.js
   - /vendor/jquery-ui/ui/jquery.ui.core.js
   - /vendor/jquery-ui/ui/jquery.ui.widget.js
   - /vendor/jquery-ui/ui/jquery.ui.mouse.js
-  - /vendor/jquery-ui/ui/jquery.ui.draggable.js
+  - /js/jquery.ui.draggable-hack-me.js
   - /js/for-graphle-my-vizzle.js
   - self
 
