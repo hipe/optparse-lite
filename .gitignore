@@ -1,4 +1,5 @@
 *-app.rb
+whatever/config/deploy.rb
 NOGIT-*
 mysite/coverage/
 mysite/output/
