@@ -1,0 +1,78 @@
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta charset="utf-8" />
+    <title>xhtml svg ok</title>
+    <link rel="stylesheet" type="text/css" href="/css/site-global.css" media="screen" />
+    <link rel="stylesheet" type="text/css" href="/css/drag-test.css" media="screen" />
+    <script src="/js/jquery-1.4.3.pre-hact.js" type="text/javascript"></script>
+    <script src="/js/drag-test.js" type="text/javascript"></script>
+  </head>
+  <body>
+    <div id='main'>
+      <p><em>
+        can we embed an svg inline in a jquery-enhanced html5 xml document?
+      </em></p>
+      <br />
+      <div id='master-rapper'>
+
+        <svg xmlns="http://www.w3.org/2000/svg"
+          xmlns:xlink="http://www.w3.org/1999/xlink"
+          version="1.1"
+          id='the-svg'
+          preserveAspectRatio="xMidYMid slice"
+        >
+          <g id='transform-me'>
+            <path id="arrow1" d="M100,30 C 120,20 160,20 188,30 l0,-10 l10,18 l-16,14 l4,-12 C 160,30 120,30 103,40 L100,30 " stroke="#777777" stroke-width="2" fill="#cceeff" />
+            <path id="arrow2" d="M188,68 C 160,78 140,78 110,68 L 110,80 102,60 115,44 111,58 C 140,67 170,67 185,58 z" stroke="#777777" stroke-width="2" fill="#cceeff" />
+            <path id="words2" d="M110,65 C 140,75 160,75 188,65" fill='none' stroke='none' />
+            <text font-size="10.5" fill="black">
+              <textPath xlink:href="#words2">&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;dreams</textPath>
+            </text>
+            <path id="words1" d="M100,37 C 120,29 138,24 180,37" fill='none' stroke='none' />
+            <text font-size="10.5" fill="black">
+              <textPath xlink:href="#words1">&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;wishes</textPath>
+            </text>
+
+          	<g fill="none" stroke="#777777" stroke-width="1">      	
+          		<path stroke-dasharray="3,2" d="M 144,0 145,100"/>
+          	</g>
+
+            <path id="words-click-left" d="M58,80 108,80" fill='none' stroke='none' />
+            <path id="words-click-right" d="M180,80 230,80" fill='none' stroke='none' />
+
+            <text font-size="10.5" fill="#777777">
+              <textPath xlink:href="#words-click-left">click here</textPath>
+            </text>
+            <text font-size="10.5" fill="#777777">
+              <textPath xlink:href="#words-click-right">click here</textPath>
+            </text>
+          </g>
+        </svg>
+        <div class='click-overlay'>
+          <div class='left-half'>
+
+          </div>
+          <div class='right-half'>
+
+          </div>
+        </div>
+      </div>
+      <div class='clear'></div>
+      <p>
+        In my firefox3 and safari i see a diagram with two arrows above.
+      </p>
+      <p>See the <em><a href='/diff-1.html'>changes i made to jquery</a></em> to get it to
+          work with this xml/xhtml whatever-it-is document.
+      </p>
+      <p>If you know what i'm doing wrong, or you know how i can achieve the same effect
+        withouth hacking jquery, i would be
+        <a href='mailto:mark.meves@gmail.com'>glad to </a>
+        <a href="irc://chat.freenode.net/#ruby-lang">hear it!</a>
+      </p>
+
+      <p>But with or without you the revolution must continue.</p>
+
+      <em><a href='/'>back to main page</a></em>
+    </div>
+  </body>
+</html>
