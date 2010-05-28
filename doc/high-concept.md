@@ -7,6 +7,7 @@ javascripts:
   - /vendor/jquery-ui/ui/jquery.ui.widget.js
   - /vendor/jquery-ui/ui/jquery.ui.mouse.js
   - /vendor/jquery-ui/ui/jquery.ui.draggable.js
+  - /js/for-graphle-my-vizzle.js
   - self
 
 javascripts-off: [/vendor/jquery-1.3.js]
@@ -61,17 +62,19 @@ OptparseLite (at least partially) parses a stream of input characters, turns the
 
 
 
-Conceptually these loci are usually referred to as `command`s.  In practice it makes good sense for them to be implemented by ruby methods, which form a clean analog / isomorphicism with cli commands for several reasons explored below.[^nomod]
+Conceptually these loci are usually referred to as `command`s.  In practice it makes good sense for them to be implemented by ruby methods, which form a clean analog / isomorphicism with cli commands for several reasons expounded on below with vivid math.[^nomod]
 
 None of this is especially unique to OptparseLite, but it is important that we frame the discussion in these terms to understand this important emerging field of command line processing.
 
-Note that most option parsing libraries don't need to address these issues because they don't deal with _what_ the commands are, they just deal with parsing the options _of_ the command(s).[^nocom]
+However note that most option parsing libraries don't need to address some of the below issues because they don't deal with _what_ the commands are, they just deal with parsing the options _of_ the command(s).[^nocom]
+
+It is a philosophical burden that OptparseLite alone must bear on its narrowly set but ample shoulders; because unlike its peers it cannot remain blissfully ignorant of the exquisite symphony of the stars that governs the motion of planets of data guided as they are by their gravitational forces of logic along their predetermined (and sometimes determinate) paths in the infinite tango that plays out below our fingertips daily.
 
 ### modules can model user interfaces
 
-OptparseLite effectively lets you model the user interface of your application in terms of a set of commands, each of which takes a set of zero or more options and a list of zero or more arguments.  OptparsLite is a grammar for defining interfaces composed of commands, and a tool for parsing requests per the interface defined by the grammar you create in this grammar.
+OptparseLite effectively lets you model the user interface of your application in terms of a [set](/high-concept/terms#set) of commands, each of which takes a [set](/high-concept/terms#set) of zero or more options and a [list](/high-concept/terms#list) of zero or more arguments.  OptparsLite is a grammar for defining interfaces composed of commands, and a tool for parsing requests per the interface defined by the grammar you create in this grammar.
 
-The grammar you define with OptparseLite defines the set (or a superset) of all valid requests for your application.  You do this by defining the set of all valid commands.  You define a command by defining the set of all valid requests for each command.  You do this by defining the set of all valid options and arguments each command takes.  You do this by defining a set of valid values that each option/argument takes.
+The grammar you define with OptparseLite defines the [set](/high-concept/terms#set) (or a superset) of all valid requests for your application.  You do this by defining the set of all valid commands.  You define a command by defining the set of all valid requests for each command.  You do this by defining the set of all valid options and arguments each command takes.  You do this by defining a set of valid values that each option/argument takes.
 
 
 
