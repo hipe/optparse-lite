@@ -1,0 +1,23 @@
+--- output/js/jquery-1.4.3.pre-hack-me.js	2010-05-28 10:16:55.000000000 +0000
++++ output/js/jquery-1.4.3.pre-hack-me.js	2010-05-28 04:41:02.000000000 +0000
+@@ -381,7 +381,9 @@
+ 		// Make sure that the DOM is not already loaded
+ 		if ( !jQuery.isReady ) {
+ 			// Make sure body exists, at least, in case IE gets a little overzealous (ticket #5443).
+-			if ( !document.body ) {
++
++			if ( 0 == $(document).find('body').size ) {
++				// if ( !document.body ) {
+ 				return setTimeout( jQuery.ready, 13 );
+ 			}
+ 
+@@ -844,7 +846,8 @@
+ 		div = document.createElement("div"),
+ 		id = "script" + jQuery.now();
+ 
+-	div.style.display = "none";
++	//div.style.display = "none"; // hact for nandoc
++	div.style && (div.style.display = "none"); // hact for nandoc
+ 	div.innerHTML = "   <link/><table></table><a href='/a' style='color:red;float:left;opacity:.55;'>a</a><input type='checkbox'/>";
+ 
+ 	var all = div.getElementsByTagName("*"),
