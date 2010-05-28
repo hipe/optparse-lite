@@ -1,0 +1,32 @@
+#the-svg {
+  height:100px;
+  width:300px;
+}
+#master-rapper {
+  /*border: 1px solid black;*/
+  position: relative;
+  float:left;
+}
+#master-rapper .click-overlay {
+  /*border:1px solid red;*/
+  height: 100%;
+  left:0;
+  position:absolute;
+  top:0;
+  width: 100%;
+}
+#master-rapper .click-overlay .left-half {
+  /*border: 1px solid orange;*/
+  float: left;
+  height: 100%;
+  width: 46%;
+}
+#master-rapper .click-overlay .right-half {
+  /*border: 1px solid green;*/
+  float: right;
+  height: 100%;
+  width: 52%;
+}
+div.clear {
+  clear:both;
+}
