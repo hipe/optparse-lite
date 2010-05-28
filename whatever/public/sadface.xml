@@ -60,6 +60,7 @@
       <div class='clear'></div>
       <p>
         In my firefox3 and safari i see a diagram with two arrows above.
+        Also in <em>both</em> these browsers clicking on the image should make it rotate.
       </p>
       <p>See the <em><a href='/diff-1.html'>changes i made to jquery</a></em> to get it to
           work with this xml/xhtml whatever-it-is document.

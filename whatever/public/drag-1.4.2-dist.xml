@@ -5,7 +5,7 @@
     <link rel="stylesheet" type="text/css" href="/css/site-global.css" media="screen" />
     <!-- <script src="/js/jquery-1.4.2.js" type="text/javascript"></script> -->
     <script src="http://ajax.googleapis.com/ajax/libs/jquery/1.4.2/jquery.js"></script>
-    <script src="/js/drag-test.js" type="text/javascript"></script>
+    <script src="/js/conf-popup.js" type="text/javascript"></script>    
   </head>
   <body>
     <div id='main'>
@@ -19,7 +19,7 @@
         if jquery loaded successfully you would have seen a dialog box popup when this page loaded.
       </p>
       <p>
-        if you are looking at this with firebug turned on you may see some errors.
+        if you are looking at this with firebug (firefox) turned on you may see some errors.
       </p>
     </div>
   </body>
