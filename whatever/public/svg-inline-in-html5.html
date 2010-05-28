@@ -1,0 +1,33 @@
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <title>html5 svg inline</title>
+    <link rel="stylesheet" type="text/css" href="/css/site-global.css" media="screen" />
+  </head>
+  <body>
+    <div id='main'>
+      <p><em>
+        can we embed an svg <em>inline</em> in an html5 document?
+      </em></p>
+      <br />
+      
+      <svg xmlns="http://www.w3.org/2000/svg"
+        xmlns:xlink="http://www.w3.org/1999/xlink"
+        version="1.1"
+        preserveAspectRatio="xMidYMid slice"
+        style="width:100%; height:100%; position:absolute; top:0; left:2px; z-index:-1;">
+        <path id="arrow1" d="M100,30 C 120,20 160,20 188,30 l0,-10 l10,18 l-16,14 l4,-12 C 160,30 120,30 103,40 L100,30 " stroke="#777777" stroke-width="2" fill="#cceeff" />
+        <path id="arrow2" d="M188,68 C 160,78 140,78 110,68 L 110,80 102,60 115,44 111,58 C 140,67 170,67 185,58 z" stroke="#777777" stroke-width="2" fill="#cceeff" />
+        <path id="words2" d="M110,65 C 140,75 160,75 188,65" fill='none' stroke='none' />
+        <text font-size="10.5" fill="black">
+          <textPath xlink:href="#words2">&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;dreams</textPath>
+        </text>
+        <path id="words1" d="M100,37 C 120,29 138,24 180,37" fill='none' stroke='none' />
+        <text font-size="10.5" fill="black">
+          <textPath xlink:href="#words1">&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;wishes</textPath>
+        </text>
+      </svg>      
+
+    </div>
+  </body>
+</html>
