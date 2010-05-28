@@ -174,7 +174,7 @@ z-index: 2;
 .nandoc-menu-sep {
 float: left;
 margin: 0 0.2em;
-z-index; 1;
+z-index: 1;
 }
 .nanoc-sidebar-h2 {
 color: #333;
