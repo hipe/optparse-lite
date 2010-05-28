@@ -60,7 +60,8 @@
       <div class='clear'></div>
       <p>
         In my firefox3 and safari i see a diagram with two arrows above.
-        Also in <em>both</em> these browsers clicking on the image should make it rotate.
+        Also the image should rotate when clicked. (in <em>both</em> these browsers yay.)
+        <em><span style='font-size: smaller'>zoom in with your browser, no aliasing! yay vectors</span></em>
       </p>
       <p>See the <em><a href='/diff-1.html'>changes i made to jquery</a></em> to get it to
           work with this xml/xhtml whatever-it-is document.
