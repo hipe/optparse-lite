@@ -1,2 +1,4 @@
 require 'nanoc3/tasks'
 require 'nandoc/tasks'
+# require 'vlad'
+# Vlad.load(:app => nil, :scm => 'git')
