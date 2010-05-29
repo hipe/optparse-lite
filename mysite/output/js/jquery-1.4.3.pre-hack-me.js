@@ -6337,19 +6337,45 @@ jQuery.each([ "Height", "Width" ], function( i, name ) {
 			});
 		}
 
+		var getTheDocumentBody = function(){
+			if (elem.document.body) {
+				return elem.document.body;
+			} else {
+				var body = jQuery(elem.document).find('body')[0];
+				if (!body) {
+					alert("hey fixme you funky duck");
+					return body;
+				} else {
+					elem.document.body = body;
+					return body;
+				}
+			}
+		};
+
+		var getTheElementBody = function(){
+			if (elem.body) {
+				return elem.body;
+			} else {
+				var body = jQuery(elem).find('body')[0];
+				return body;
+			}
+		};
+
 		return ("scrollTo" in elem && elem.document) ? // does it walk and quack like a window?
+
 			// Everyone else use document.documentElement or document.body depending on Quirks vs Standards mode
 			elem.document.compatMode === "CSS1Compat" && elem.document.documentElement[ "client" + name ] ||
-			// elem.document.body[ "client" + name ] :
-			jQuery(elem.document).find('body')[0][ "client" + name ] : // nandoc hack
+			getTheDocumentBody()[ "client" + name ] :
 
 			// Get document width or height
 			(elem.nodeType === 9) ? // is it a document
 				// Either scroll[Width/Height] or offset[Width/Height], whichever is greater
 				Math.max(
 					elem.documentElement["client" + name],
-					elem.body["scroll" + name], elem.documentElement["scroll" + name],
-					elem.body["offset" + name], elem.documentElement["offset" + name]
+					//elem.body["scroll" + name], elem.documentElement["scroll" + name],
+					getTheElementBody()["scroll" + name], elem.documentElement["scroll" + name],
+					//elem.body["offset" + name], elem.documentElement["offset" + name]
+					getTheElementBody()["offset" + name], elem.documentElement["offset" + name]
 				) :
 
 				// Get or set width or height on the element
