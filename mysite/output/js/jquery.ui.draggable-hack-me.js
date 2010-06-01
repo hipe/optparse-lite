@@ -197,12 +197,8 @@ $.widget("ui.draggable", $.ui.mouse, {
 			return false;
 
 		if((this.options.revert == "invalid" && !dropped) || (this.options.revert == "valid" && dropped) || this.options.revert === true || ($.isFunction(this.options.revert) && this.options.revert.call(this.element, dropped))) {
-			var self = this;
-			$(this.helper).animate(this.originalPosition, parseInt(this.options.revertDuration, 10), function() {
-				if(self._trigger("stop", event) !== false) {
-					self._clear();
-				}
-			});
+			var revertAnimationOpts = this.getRevertAnimationOpts(event);
+			$(this.helper).animate(this.originalPosition, revertAnimationOpts);
 		} else {
 			if(this._trigger("stop", event) !== false) {
 				this._clear();
@@ -454,8 +450,26 @@ $.widget("ui.draggable", $.ui.mouse, {
 			originalPosition: this.originalPosition,
 			offset: this.positionAbs
 		};
+	},
+	getRevertAnimationOpts: function(event){
+		var opts;
+		var self = this;		
+		if (this.options.revertAnimationOpts) {
+			opts = this.options.revertAnimationOpts;
+		} else {
+			opts = {};
+		}
+		if (! opts.duration) {
+			opts.duration = parseInt(this.options.revertDuration, 10);
+		}
+		// for now, overwrite whatever was there! b/c it's tied to this specific event
+		opts.complete = function() { // untouched logic from orig before nandoc hack
+			if(self._trigger("stop", event) !== false) {
+				self._clear();
+			}
+		};
+		return opts;
 	}
-
 });
 
 $.extend($.ui.draggable, {
