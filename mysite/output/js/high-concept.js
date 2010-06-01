@@ -9,7 +9,6 @@ jQuery(document).ready(function(){
 		opacity: 0.10, /* not working ? */
 		revert: true,
 		revertAnimationOpts: {
-			complete: function(){ alert('com2'); },
 			queue:false,
 			duration: 1000,
 			easing: 'easeNandocCustomExperiment1'
