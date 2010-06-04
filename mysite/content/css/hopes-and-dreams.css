@@ -98,6 +98,7 @@
   left: 0px;
 }
 #fig-2 .square {
+  cursor: move;
   margin:0 0 0.5em;
   padding:10px;
   position: absolute;
@@ -128,13 +129,27 @@
 #fig-2 .mod {
   top: 0px;
 }
+#fig-2 .intr {
+  top: 0px;
+}
 #fig-2 .meth {
+  top: 67px;
+}
+#fig-2 .cmd {
   top: 67px;
 }
 #fig-2 .param {
   top: 134px;
 }
+#fig-2 .arg {
+  top: 134px;
+}
 #fig-2 .opts {
+  left:37px;
+  top:219px;
+  width:88px;
+}
+#fig-2 .opts2 {
   left:37px;
   top:219px;
   width:88px;
@@ -167,7 +182,15 @@
   top: 285px;
   width: 71px;
 }
+#fig-2 .trail2 {
+  top: 285px;
+  width: 71px;
+}
 #fig-2 .splat {
+  top: 380px;
+  width: 40px;
+}
+#fig-2 .splat2 {
   top: 380px;
   width: 40px;
 }
