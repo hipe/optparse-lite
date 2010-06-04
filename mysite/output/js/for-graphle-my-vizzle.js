@@ -30,12 +30,21 @@
 		}
 		return md[0];
 	};
-	var RegExpExtra = {
+	/*
+	* this was prettier as an extension to regexp but safari doesn't want
+	* us to extend regexp objects
+	*/
+	var MyRegExp = function(re, name){
+		if ('string'==typeof(re)) re = new RegExp(re);
+		this.regexp = re;
+		this.name = name;
+	};
+	MyRegExp.prototype = {
 		someName: function(){
-			return this.name ? this.name : this;
+			return this.name ? this.name : this.regexp;
 		},
 		execAssert: function(str){
-			var md = this.exec(str);
+			var md = this.regexp.exec(str);
 			if (!md) {
 				return commonFailure("failed to match "+this.someName()+
 					" against "+str
@@ -316,7 +325,7 @@
 				ret = new VizzleCircle(mgr, elem, md[1]);
 			break;
 			case 'r':
-			  ret = new VizzleRigidBody(mgr, elem, md[1]);
+			  ret = new VizzleRidgidBody(mgr, elem, md[1]);
 			break;
 		}
 		return ret;
@@ -369,13 +378,8 @@
 		this.vizzleThingInit(mgr, elem, name);
 	};
 	var F = '-?\\d+(?:\\.\\d+)?'; // used in several places in this file
-	VizzleArc.ReHead = new RegExp('^M ('+F+'),('+F+')(.*)$');
-	VizzleArc.ReHead.name = 'ReHead';
-	jQuery.extend(VizzleArc.ReHead, RegExpExtra);
-
-	VizzleArc.ReTail = new RegExp('^(M .*?)('+F+'),('+F+')$');
-	VizzleArc.ReTail.name = 'ReTail';
-	jQuery.extend(VizzleArc.ReTail, RegExpExtra);
+	VizzleArc.ReHead = new MyRegExp('^M ('+F+'),('+F+')(.*)$', 'ReHead');
+	VizzleArc.ReTail = new MyRegExp('^(M .*?)('+F+'),('+F+')$', 'ReTail');
 
 	VizzleArc.prototype = jQuery.extend({}, VizzleThingAbstract, {
 		// name needs to correspond to jquery selection method name
@@ -498,7 +502,7 @@
 		setPositionListenersAndNotifyOfDragStart:
 			setPositionListenersAndNotifyOfDragStart
 	});
-	VizzleRigidBody = function(mgr, elem, name){
+	VizzleRidgidBody = function(mgr, elem, name){
 		if (elem[0].nodeName != 'path') {
 			return this.fail("bad element type for rigid body:"+elem[0].nodeName);
 		}
@@ -506,11 +510,9 @@
 		this.vizzleThingInit(mgr, elem, name);
 		return null;
 	};
-	VizzleRigidBody.re = new RegExp('^M ('+F+'),('+F+')(.+)$');
-	VizzleRigidBody.re.name = 'rigid body D attr regexp';
-	jQuery.extend(VizzleRigidBody.re, RegExpExtra);
+	VizzleRidgidBody.re = new MyRegExp('^M ('+F+'),('+F+')(.+)$', 'rigid body D attr regexp');
 
-	VizzleRigidBody.prototype = jQuery.extend({}, VizzleThingAbstract, {
+	VizzleRidgidBody.prototype = jQuery.extend({}, VizzleThingAbstract, {
 		position: function(){
 			return this.posNow ? this.posNow : this.getPosition();
 		},
@@ -528,7 +530,7 @@
 			return this.posNow;
 		},
 		getPathData: function(){
-			var md = VizzleRigidBody.re.execAssert(this.svgElem.attr('d'));
+			var md = VizzleRidgidBody.re.execAssert(this.svgElem.attr('d'));
 			md[1] = parseFloat(md[1]);
 			md[2] = parseFloat(md[2]);
 			this.lastPathData = md;
@@ -552,11 +554,86 @@
 			this.distY = this.posNow.top - this.posHome.top;
 		}
 	});
+	var SlideManager = function(elem){
+		this.elem = elem;
+		this.slideManagerInit();
+	};
+	SlideManager.prototype = {
+		slideManagerInit: function(){
+			this.playButtonOverlay = this.elem.find('.big-button-overlay');
+			mylog("PBO"); PBO = this.playButtonOverlay;
+			this.frame = this.playButtonOverlay.find('.frame');
+			var self = this;
+			this.frame.click(function(e){
+				self.playWasClicked(e);
+			});
+		},
+		// private
+		fail: commonFailure,
+		mylog: mylog,
+		playWasClicked: function(e){
+			var pbo = this.playButtonOverlay;
+			tardNuggetFadeTo(pbo, 
+				444, 0.0, function(){pbo.css('display','none');});
+		}
+	};
+
+	/* wicked hack that shouldn't be here, but div.style it's not exist in xml 
+		so we don't have a working fadeTo(), etc
+		@param (int) duration in ms
+		@param (float) final between 0 and 1, 0 being transparent 1 being opaque
+	*/
+	var tardNuggetFadeTo = function(el, duration, toOpacity, callback){
+		if ("number" != typeof(duration) || duration < 0)
+		 	return commonFailure("bad duration: "+duration);
+		if ("number" != typeof(toOpacity) || toOpacity < 0.0 || toOpacity > 1.0)
+		 	return commonFailure("bad opacity: "+toOpacity);
+		var currentOpacity = el.css('opacity');
+		if (! (/^\d+(?:\.\d+)?$/).test(currentOpacity))
+			return commonFailure("i don't like this opacity: "+currentOpacity);
+		var fromOpacity = parseFloat(currentOpacity);
+		var msPerStep = 1000/24; // 24 fps
+		var numSteps = parseInt(duration / msPerStep, 10);
+		if (numSteps == 0) return commonFailure("numSteps is zero");
+		var currStep = 0;
+		// assume it is at 1 if it wasn't set explicity, because it is in FF
+		var opacityDiff = toOpacity - fromOpacity;
+		var opacityStep = opacityDiff / numSteps;
+		var func;
+		func = function(){
+			var nextOpacity = fromOpacity + opacityStep;
+			fromOpacity = nextOpacity;
+			var crazy = {
+				'-moz-opacity' : nextOpacity,
+				'filter' : ('alpha(opacity='+(parseInt(nextOpacity*100, 10))+')'),
+				'-khtml-opacity' : nextOpacity,
+				'opacity' : nextOpacity
+			};
+			// with floating point fuzziness there's really no good way ..? 
+			var opacityOk = (nextOpacity >= 0.0 && nextOpacity <= 1.0 &&
+				! (/e/).test(''+nextOpacity)); // avoid numbs with scientific notation
+			if (opacityOk) { 
+				mylog("about to do this one: "+nextOpacity);
+				el.css(crazy); 
+			}
+			currStep ++;
+			if (currStep < numSteps && opacityOk) {
+				setTimeout(func, msPerStep);
+			} else {
+				setTimeout(callback, msPerStep+17); // whatever gah
+			}
+		};
+		func();
+		return null;
+	};
 
 	// public api
 	jQuery.vizzle = {
 		newLigatureManager: function(x){
 			return new LigatureManager(x);
+		},
+		newSlideManager: function(x){
+			return new SlideManager(x);
 		}
 	};
 })();
