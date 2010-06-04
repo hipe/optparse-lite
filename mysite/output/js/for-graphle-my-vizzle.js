@@ -1,6 +1,7 @@
 (function(){
-	jQuery.fn.vizzle_when_you_mouseover_it_changes_color = function(bgColor, opts) {
-	  return this.each(function(){
+	jQuery.fn.vizzle_when_you_mouseover_it_changes_color = 
+		function(bgColor, opts) {
+			return this.each(function(){
 			var someFucker = jQuery(this);
 			var currentColor = someFucker.css('background-color');
 			var highlight = function(){
@@ -15,9 +16,10 @@
 			someFucker.mouseleave(function(){
 				lowlight();
 			});
-	  });
+		});
 	};
-	var VizzleThing = null; // forward declaration for class below
+
+	// common methods used in classes like mixins
 	var commonFailure = function(msg){
 		throw new Error(msg);
 	};
@@ -27,6 +29,20 @@
 			return this.fail("not string or empty string: "+str);
 		}
 		return md[0];
+	};
+	var RegExpExtra = {
+		someName: function(){
+			return this.name ? this.name : this;
+		},
+		execAssert: function(str){
+			var md = this.exec(str);
+			if (!md) {
+				return commonFailure("failed to match "+this.someName()+
+					" against "+str
+				);
+			}
+			return md;
+		}
 	};
 	var mylog = function(msg){
 		if (window.console && window.console.log) {
@@ -44,6 +60,7 @@
 			mylog(msg);
 		}
 	};
+
 	/**
 	* construct this with a jquery selection that has your entire ligature
 	* model, including svg.  Svg's must be in an element with a class 'backlay'
@@ -63,6 +80,7 @@
 	LigatureManager.prototype = {
 		current: null, // the current draggable (just for ddmanager api)
 		/**
+		* adapted from George McGinley Smith's work
 		* @return btwn 0 & 1 float of where to be at this point
 		*
 		* @param x - what ratio from start to done
@@ -94,38 +112,38 @@
 		drag: function(ui, event){
 			// just part of ddmanager api, ignored for now
 		},
-		dragStart: function(event, ui){
-			var thingName = firstWordAssert(jQuery(event.target).attr('class'));
-			this.setListenersForExternalThing(thingName, event, ui);
-		},
-		dragActual: function(e, ui){
+		dragNotify: function(e, ui){
 			if (this.listeningToThisDrag) {
 				var i = this.listeningToThisDrag.length;
 				while (i--) {
-					this.listeningToThisDrag[i].thingDragged(e, ui);
+					this.listeningToThisDrag[i].dragNotify(e, ui);
 				}
 			}
 		},
-		// this is called after ease-back
-		dragStop: function(event, ui){
+		// called by hooks into jquery ui draggable
+		dragStartNotify: function(event, ui){
+			var thingName = firstWordAssert(jQuery(event.target).attr('class'));
+			this.setListenersForExternalThing(thingName, event, ui);
+		},
+		// called after ease-back by hook into jquery ui draggable
+		dragStopNotify: function(event, ui){
 			if (!this.listeningToThisDrag) return null;
 			var i = this.listeningToThisDrag.length;
 			while (i--) {
-				this.listeningToThisDrag[i].thingDragStop(event, ui);
+				this.listeningToThisDrag[i].dragStopNotify(event, ui);
 			}
 			return null;
 		},
 		// part of ddmanager api
 		drop: function(ui, event){
-			if (this.listeningToThisDrag){
+			if (this.listeningToThisDrag) {
 				var i = this.listeningToThisDrag.length;
 				while (i--) {
-					this.listeningToThisDrag[i].thingDrop(ui, event);
+					this.listeningToThisDrag[i].dropNotify(ui, event);
 				}
 			}
 			return false; // i don't know but this is blah blah look at draggable
 		},
-		firstWordAssert: firstWordAssert,
 		getLiggedVizzleThings: function(thingName){
 			var pairs = [], rec, lig;
 			if ((rec = this.getLigsRecord(thingName))) {
@@ -139,7 +157,7 @@
 			}
 			return pairs;
 		},
-		getThing: function(thingName){
+		getThingElement: function(thingName){
 			if (!this.mapIsSetup) this.setupMap();
 			var result = null;
 			if (this.nameToElem[thingName]) {
@@ -214,7 +232,8 @@
 			var ligRecord = {
 				elem: elem
 			};
-			for (var i = 0; i < these.length; i++ ){ // need to go ascending for ligs!
+			// need to go ascending for ligs!
+			for (var i = 0; i < these.length; i++ ){
 				part = these[i];
 				if (null == (md2 = /^(?:(pos-)|(tail-))(.+)$/.exec(part))) {
 					return this.fail("bad lig element: "+part);
@@ -244,7 +263,7 @@
 				var vizzleThing = pair[0];
 				var subLig = pair[1];
 				var subLigIdx = pair[2];
-				vizzleThing.thingDragStart(thingName, subLig, subLigIdx);
+				vizzleThing.dragStartNotify(thingName, subLig, subLigIdx);
 				this.addDragListener(vizzleThing);
 			}
 			return null;
@@ -273,8 +292,8 @@
 							this.processLig(elem, md, lastName);
 						}
 					} else {
-						// we will almost certainly want to ignore non-magic class names one day
-						// but for now we bark
+						// we will almost certainly want to ignore non-magic
+						// class names one day but for now we bark
 						this.mylog("whuh: "+cls);
 					}
 				}
@@ -285,7 +304,7 @@
 	vizzleThingFactory = function(mgr, elem){
 		var specialClass = firstWordAssert(elem.attr('class'));
 		var md;
-		if (!(md = /^name-((a|c).+)$/.exec(specialClass))) {
+		if (!(md = /^name-((a|c|r).+)$/.exec(specialClass))) {
 			return commonFailure("class name not special: "+specialClass);
 		}
 		var ret;
@@ -296,35 +315,35 @@
 			case 'c':
 				ret = new VizzleCircle(mgr, elem, md[1]);
 			break;
+			case 'r':
+			  ret = new VizzleRigidBody(mgr, elem, md[1]);
+			break;
 		}
 		return ret;
 	};
-	VizzleAbstract = {
+	var VizzleThingAbstract = {
 		vizzleThingInit: function(mgr, elem, name){
 			this.mylog("made a VizzleThing for <"+elem[0].nodeName+"> ("+name+")");
 			this.mgr = mgr;
 			this.name = name;
 			this.svgElem = elem;
 		},
-		easeBackInit: function(){
-			this.mylog("initting ease back");
-		},
-		easeBackToHere: function(ratio){
-			dx = this.distX * ( 1 - ratio );
-			dy = this.distY * ( 1 - ratio );
-			this.moveYourBody(dx, dy);
-		},
-		thingDragStart: function(thingNameOrThing, subLig, subLigIdx){
+		dragStartNotify: function(thingNameOrThing, subLig, subLigIdx){
 			var theThing = ('object'==typeof(thingNameOrThing)) ?
-			  thingNameOrThing : this.mgr.getThing(thingNameOrThing);
+				thingNameOrThing : this.mgr.getThingElement(thingNameOrThing);
 			this.trackingThisThing = theThing; // maybe, maybe not
 			this.subLig = subLig;
 			this.subLigIdx = subLigIdx;
 			this.svgElemDragStart();
 			this.thingStartPosition = theThing.position();
 		},
+		easeBackToHere: function(ratio){
+			dx = this.distX * ( 1 - ratio );
+			dy = this.distY * ( 1 - ratio );
+			this.moveYourBody(dx, dy);
+		},
 		// two ways to do this -- use a stored elem or the one in the event.
-		thingDragged: function(e, ui){
+		dragNotify: function(e, ui){
 			if (e && (e.target != this.trackingThisThing[0])) {
 				return this.fail("what happened here?");
 			}
@@ -336,7 +355,7 @@
 			}
 			return null;
 		},
-		thingDragStop: function(e, ui){
+		dragStopNotify: function(e, ui){
 			this.moveYourBody(0, 0);
 		},
 		// private
@@ -344,109 +363,196 @@
 		mylert: mylert,
 		mylog: mylog
 	};
+
+	// in graph theory 'arc' is the thing that connects two nodes
 	VizzleArc = function(mgr, elem, name){
 		this.vizzleThingInit(mgr, elem, name);
 	};
-	var f = '-?\\d+(?:\\.\\d+)?';
-	VizzleArc.ReHead = new RegExp('^M ('+f+'),('+f+')( '+f+','+f+')$');
-	VizzleArc.ReTail = new RegExp('^(M '+f+','+f+' )('+f+'),('+f+')$');
-	VizzleArc.prototype = jQuery.extend({}, VizzleAbstract, {
- 		svgElemDragStart: function(){
+	var F = '-?\\d+(?:\\.\\d+)?'; // used in several places in this file
+	VizzleArc.ReHead = new RegExp('^M ('+F+'),('+F+')(.*)$');
+	VizzleArc.ReHead.name = 'ReHead';
+	jQuery.extend(VizzleArc.ReHead, RegExpExtra);
+
+	VizzleArc.ReTail = new RegExp('^(M .*?)('+F+'),('+F+')$');
+	VizzleArc.ReTail.name = 'ReTail';
+	jQuery.extend(VizzleArc.ReTail, RegExpExtra);
+
+	VizzleArc.prototype = jQuery.extend({}, VizzleThingAbstract, {
+		// name needs to correspond to jquery selection method name
+		position: function(){
+			this.fail("do we use this?");
+		},
+		svgElemDragStart: function(){
 			switch(this.subLigIdx){
 				case 0:
-					this.getArcPath = this.getArcPathHead;
-					this.moveYourBody = this.moveYourBodyHead;
+					this.getPathData = this.getPathDataHead;
+					this.moveYourBody = this.moveYourHead;
+					this.pathData = this.getPathData();
+					this.posHome = {left: this.pathData[1], top: this.pathData[2]};
+					this.posNow = {};
 				break;
 				case 1:
-					this.getArcPath = this.getArcPathTail;
-					this.moveYourBody = this.moveYourBodyTail;
+					this.getPathData = this.getPathDataTail;
+					this.moveYourBody = this.moveYourTail;
+					this.pathData = this.getPathData();
+					this.posHome = {left: this.pathData[2], top: this.pathData[3]};
+					this.posNow = {};
 				break;
 				default:
 					this.fail("unexpected sublig index: "+this.subLigIdx);
 			}
- 			this.arcPathHome = this.getArcPath();
 			return null;
- 		},
-		thingDrop: function(ui, e){
-			this.arcPathDrop = this.getArcPath();
-			this.distX = this.arcPathDrop[1] - this.arcPathHome[1];
-			this.distY = this.arcPathDrop[2] - this.arcPathHome[2];
+		},
+		// called by lig manager
+	 	dropNotify: function(ui, e){
+			this.distX = this.posNow.left - this.posHome.left;
+			this.distY = this.posNow.top - this.posHome.top;
+			return null;
 		},
 		// private
-		getArcPathHead: function(){
-			var md = VizzleArc.ReHead.exec(this.svgElem.attr('d'));
-			if (!md) return this.fail("failed for head: "+this.svgElem.attr('d'));
+		getPathDataHead: function(){
+			var md = VizzleArc.ReHead.execAssert(this.svgElem.attr('d'));
 			md[1] = parseFloat(md[1]);
 			md[2] = parseFloat(md[2]);
 			return md;
 		},
-		getArcPathTail: function(){
-			var md = VizzleArc.ReTail.exec(this.svgElem.attr('d'));
-			if (!md) return this.fail("failed for tail: "+this.svgElem.attr('d'));
+		getPathDataTail: function(){
+			var md = VizzleArc.ReTail.execAssert(this.svgElem.attr('d'));
 			md[2] = parseFloat(md[2]);
 			md[3] = parseFloat(md[3]);
 			return md;
 		},
-		moveYourBodyHead: function(dx, dy){
-			var newD = 'M '+(this.arcPathHome[1]+dx)+','+(this.arcPathHome[2]+dy)+
-			            this.arcPathHome[3];
-			this.svgElem.attr('d',newD);
+		moveYourHead: function(dx, dy){
+			this.posNow.left = this.posHome.left + dx;
+			this.posNow.top = this.posHome.top + dy;
+			var pathData = 'M ' + (this.posNow.left) + ',' + (this.posNow.top) +
+				this.pathData[3];
+			this.svgElem.attr('d',pathData);
 			return null;
 		},
-		moveYourBodyTail: function(dx, dy){
-			var newD = this.arcPathHome[1] + (this.arcPathHome[2]+dx)+','+
-					(this.arcPathHome[3]+dy);
-			this.svgElem.attr('d',newD);
+		moveYourTail: function(dx, dy){
+			this.posNow.left = this.posHome.left + dx;
+			this.posNow.top = this.posHome.top + dy;
+			var pathData = this.pathData[1] +
+				(this.posNow.left)+','+(this.posNow.top);
+			this.svgElem.attr('d',pathData);
 			return null;
 		}
 	});
+	// might be shared among ridgid bodies
+	// for now it only wants to work with one listener
+	var setPositionListenersAndNotifyOfDragStart = function(){
+		var things = this.mgr.getLiggedVizzleThings(this.name);
+		if (things.length != 1){
+			return this.fail("Why did we get "+things.length+" things connected "+
+			  "to " + this.name + "? Want exactly one.");
+		}
+		var vizzle = things[0][0];
+		var subLig = things[0][1];
+		var subLigIdx = things[0][2];
+		vizzle.dragStartNotify(this, subLig, subLigIdx);
+		this.positionListener = vizzle;
+		return null;
+	};
+
 	/**
 	* for now a circle must have exactly one position
 	* listener: the attached arc.
 	*/
 	VizzleCircle = function(mgr, elem, name){
-		this.positionListener = null;
 		this.vizzleThingInit(mgr, elem, name);
 	};
-	VizzleCircle.prototype = jQuery.extend({}, VizzleAbstract, {
-		position: function(){
-			return this.getCirclePosition();
+	VizzleCircle.prototype = jQuery.extend({}, VizzleThingAbstract, {
+		positionListener: null,
+		dropNotify: function(ui, e){
+			posDrop = this.getPosition();
+			this.distX = posDrop.left - this.posHome.left;
+			this.distY = posDrop.top - this.posHome.top;
 		},
- 		svgElemDragStart: function(){
- 			this.circlePosHome = this.getCirclePosition();
-			var things = this.mgr.getLiggedVizzleThings(this.name);
-			if (things.length != 1){
-				return this.fail("don't want "+things.length+" things for now: "+this.name);
-			}
-			var vizzle = things[0][0];
-			var subLig = things[0][1];
-			var subLigIdx = things[0][2];
-			vizzle.thingDragStart(this, subLig, subLigIdx);
-			this.positionListener = vizzle;
-			return null;
- 		},
-		thingDrop: function(ui, e){
-			this.circlePosDrop = this.getCirclePosition();
-			this.distX = this.circlePosDrop.left - this.circlePosHome.left;
-			this.distY = this.circlePosDrop.top - this.circlePosHome.top;
+		// name needs to correspond to jquery selection method name
+		position: function(){
+			return this.posNow ? this.posNow : this.getPosition();
+		},
+		svgElemDragStart: function(){
+			this.posHome = this.getPosition();
+			this.setPositionListenersAndNotifyOfDragStart();
 		},
 		// private
-		getCirclePosition: function(){
-			var x = parseFloat(this.svgElem.attr('cx'));
-			var y = parseFloat(this.svgElem.attr('cy'));
-			return {left: x, top: y};
+		getPosition: function(){
+			this.posNow.left = parseFloat(this.svgElem.attr('cx'));
+			this.posNow.top = parseFloat(this.svgElem.attr('cy'));
+			// either here or in caller you have to make the below a dup not orig
+			return { left: this.posNow.left, top: this.posNow.top };
 		},
 		moveYourBody: function(dx, dy){
-			var newX = this.circlePosHome.left + dx;
-			var newY = this.circlePosHome.top + dy;
-			this.svgElem.attr('cx', newX);
-			this.svgElem.attr('cy', newY);
+			this.posNow.left = this.posHome.left + dx;
+			this.posNow.top = this.posHome.top + dy;
+			this.svgElem.attr('cx', this.posNow.left);
+			this.svgElem.attr('cy', this.posNow.top);
 			if (this.positionListener) {
 				this.positionListener.moveYourBody(dx, dy);
 			}
 			return null;
+		},
+		posNow: {},
+		setPositionListenersAndNotifyOfDragStart:
+			setPositionListenersAndNotifyOfDragStart
+	});
+	VizzleRigidBody = function(mgr, elem, name){
+		if (elem[0].nodeName != 'path') {
+			return this.fail("bad element type for rigid body:"+elem[0].nodeName);
+		}
+		this.positionListener = null;
+		this.vizzleThingInit(mgr, elem, name);
+		return null;
+	};
+	VizzleRigidBody.re = new RegExp('^M ('+F+'),('+F+')(.+)$');
+	VizzleRigidBody.re.name = 'rigid body D attr regexp';
+	jQuery.extend(VizzleRigidBody.re, RegExpExtra);
+
+	VizzleRigidBody.prototype = jQuery.extend({}, VizzleThingAbstract, {
+		position: function(){
+			return this.posNow ? this.posNow : this.getPosition();
+		},
+		svgElemDragStart: function(){
+			this.getPosition(); // set posNow!
+			this.posHome = {left: this.posNow.left, top: this.posNow.top};
+			this.setPositionListenersAndNotifyOfDragStart();
+		},
+		// private
+		getPosition: function(){
+			if (!this.posNow) this.posNow = {};
+			var md = this.getPathData();
+			this.posNow.left = md[1];
+			this.posNow.top = md[2];
+			return this.posNow;
+		},
+		getPathData: function(){
+			var md = VizzleRigidBody.re.execAssert(this.svgElem.attr('d'));
+			md[1] = parseFloat(md[1]);
+			md[2] = parseFloat(md[2]);
+			this.lastPathData = md;
+			return md;
+		},
+		// @api private, called by dragNotify
+		moveYourBody: function(dx, dy){
+			this.posNow.left = this.posHome.left + dx;
+			this.posNow.top = this.posHome.top + dy;
+			var newPathData = 'M ' + this.posNow.left + ',' +
+				this.posNow.top + this.lastPathData[3];
+			this.svgElem.attr('d', newPathData);
+			if (this.positionListener) {
+				this.positionListener.moveYourBody(dx, dy);
+			}
+		},
+		setPositionListenersAndNotifyOfDragStart:
+			setPositionListenersAndNotifyOfDragStart,
+		dropNotify: function(ui, e){
+			this.distX = this.posNow.left - this.posHome.left;
+			this.distY = this.posNow.top - this.posHome.top;
 		}
 	});
+
 	// public api
 	jQuery.vizzle = {
 		newLigatureManager: function(x){
