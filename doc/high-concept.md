@@ -75,50 +75,45 @@ The grammar you define with OptparseLite defines the [set](/high-concept/terms#s
   <h4><em>a grand meta-narrative</em></h4>
   <div class="snack-wrap">
     <div class="backlay">
-      <svg preserveAspectRatio="xMidYMid slice"
-          style="width:100%; height:100%; position:absolute; top:0; left:0px; z-index:-1;"
-          version="1.1"
-          xmlns:xlink="http://www.w3.org/1999/xlink"
-          xmlns="http://www.w3.org/2000/svg"
-      >
-        <path class='name-arcmodmeth lig-pos-mod--pos-circmeth' d="M 72,35 72,59" fill="#777777" stroke-width="2" stroke="#777777" />
-        <circle class='name-circmeth lig-pos-meth--tail-arcmodmeth' cx="72" cy="63.5" fill="none" r="3.5" stroke-width="1.66" stroke="#555555" />
+      <svg preserveAspectRatio="xMidYMid slice" style="width:100%; height:100%; position:absolute; top:0; left:0px; z-index:-1;" version="1.1" xmlns:xlink="http://www.w3.org/1999/xlink" xmlns="http://www.w3.org/2000/svg">
+        <path class="name-arcmodmeth lig-pos-mod--pos-circmeth" d="M 72,35 72,59" fill="#777777" stroke-width="2" stroke="#777777" />
+        <circle class="name-circmeth lig-pos-meth--tail-arcmodmeth" cx="72" cy="63.5" fill="none" r="3.5" stroke-width="1.66" stroke="#555555" />
 
-        <path class='name-arcmethparam lig-pos-meth--pos-circparam'  d="M 72,100 72,127" fill="#777777" stroke-width="2" stroke="#777777" />
-        <circle class='name-circparam lig-pos-param--tail-arcmethparam' cx="72" cy="130.5" fill="none" r="3.5" stroke-width="1.66" stroke="#555555" />
+        <path class="name-arcmethparam lig-pos-meth--pos-circparam" d="M 72,100 72,127" fill="#777777" stroke-width="2" stroke="#777777" />
+        <circle class="name-circparam lig-pos-param--tail-arcmethparam" cx="72" cy="130.5" fill="none" r="3.5" stroke-width="1.66" stroke="#555555" />
 
-        <path class='name-ridgidoptsparam lig-pos-param--tail-arcoptsparam' d="M 105,159 l 15,-5 0,10 z" fill="none" stroke-width="2" stroke="#777777" />
-        <path class='name-arcoptsparam lig-pos-ridgidoptsparam--pos-opts' d="M 119,159 130,159 130,220" fill="none" stroke-width="2" stroke="#777777" />
+        <path class="name-ridgidoptsparam lig-pos-param--tail-arcoptsparam" d="M 105,159 l 15,-5 0,10 z" fill="none" stroke-width="2" stroke="#777777" />
+        <path class="name-arcoptsparam lig-pos-ridgidoptsparam--pos-opts" d="M 119,159 130,159 130,220" fill="none" stroke-width="2" stroke="#777777" />
 
-        <path class='name-arctrailparam lig-pos-ridgidtrailparam--pos-trail'  d="M 15,201 15,285" fill="#777777" stroke-width="2" stroke="#777777" />
-        <path class='name-ridgidtrailparam lig-pos-param--pos-arctrailparam' d="M 10,201 l 5,-13 5,13 z" fill="none" stroke-width="2" stroke="#777777" />
+        <path class="name-arctrailparam lig-pos-ridgidtrailparam--pos-trail" d="M 15,201 15,285" fill="#777777" stroke-width="2" stroke="#777777" />
+        <path class="name-ridgidtrailparam lig-pos-param--pos-arctrailparam" d="M 10,201 l 5,-13 5,13 z" fill="none" stroke-width="2" stroke="#777777" />
 
-        <path class='name-rsplat lig-pos-trail--tail-asplat' d="M 10,365 l 5,-13 5,13 z" fill="none" stroke-width="2" stroke="#777777" />
-        <path class='name-asplat lig-pos-rsplat--pos-splat' d="M 15,364 15,390" fill="#777777" id="tallz" stroke-width="2" stroke="#777777" />
+        <path class="name-rsplat lig-pos-trail--tail-asplat" d="M 10,365 l 5,-13 5,13 z" fill="none" stroke-width="2" stroke="#777777" />
+        <path class="name-asplat lig-pos-rsplat--pos-splat" d="M 15,364 15,390" fill="#777777" id="tallz" stroke-width="2" stroke="#777777" />
 
-        <path class='name-arcintrcmd lig-pos-intr--pos-circcmd' d="M 358,35 358,59" fill="#777777" stroke-width="2" stroke="#777777" />
-        <circle class='name-circcmd lig-pos-cmd--pos-arcintrcmd' cx="358" cy="63.5" fill="none" r="3.5" stroke-width="1.66" stroke="#555555" />
+        <path class="name-arcintrcmd lig-pos-intr--pos-circcmd" d="M 358,35 358,59" fill="#777777" stroke-width="2" stroke="#777777" />
+        <circle class="name-circcmd lig-pos-cmd--pos-arcintrcmd" cx="358" cy="63.5" fill="none" r="3.5" stroke-width="1.66" stroke="#555555" />
 
-        <path class='name-arccmdarg lig-pos-cmd--pos-circarg' d="M 358,100 358,127" fill="#777777" stroke-width="2" stroke="#777777" />
-        <circle class='name-circarg lig-pos-arccmdarg--pos-arg' cx="358" cy="130.5" fill="none" r="3.5" stroke-width="1.66" stroke="#555555" />
+        <path class="name-arccmdarg lig-pos-cmd--pos-circarg" d="M 358,100 358,127" fill="#777777" stroke-width="2" stroke="#777777" />
+        <circle class="name-circarg lig-pos-arccmdarg--pos-arg" cx="358" cy="130.5" fill="none" r="3.5" stroke-width="1.66" stroke="#555555" />
 
-        <path class='name-arccmdopts2 lig-pos-cmd--pos-opts2' d="M 407,100 407,220" fill="#777777" stroke-width="2" stroke="#777777" />
+        <path class="name-arccmdopts2 lig-pos-cmd--pos-opts2" d="M 407,100 407,220" fill="#777777" stroke-width="2" stroke="#777777" />
 
-        <path class='name-arctrail2arg lig-pos-ridgidtrail2arg--pos-trail2' d="M 298,201 298,285" fill="#777777" stroke-width="2" stroke="#777777" />
-        <path class='name-ridgidtrail2arg lig-pos-arg' d="M 292,201 l 6,-13 5,13 z" fill="none" stroke-width="2" stroke="#777777" />
+        <path class="name-arctrail2arg lig-pos-ridgidtrail2arg--pos-trail2" d="M 298,201 298,285" fill="#777777" stroke-width="2" stroke="#777777" />
+        <path class="name-ridgidtrail2arg lig-pos-arg" d="M 292,201 l 6,-13 5,13 z" fill="none" stroke-width="2" stroke="#777777" />
 
-        <path class='name-arcopts2opt lig-pos-opts2--pos-circopt' d="M 415,255 415,278" fill="#777777" id="opt" stroke-width="2" stroke="#777777" />
-        <circle class='name-circopt lig-pos-opt' cx="415" cy="281" fill="none" r="3.5" stroke-width="1.66" stroke="#555555" />
+        <path class="name-arcopts2opt lig-pos-opts2--pos-circopt" d="M 415,255 415,278" fill="#777777" id="opt" stroke-width="2" stroke="#777777" />
+        <circle class="name-circopt lig-pos-opt" cx="415" cy="281" fill="none" r="3.5" stroke-width="1.66" stroke="#555555" />
 
-        <path class='name-ridgidsplat2 lig-pos-trail2--pos-arcsplat2' d="M 292,365 l 6,-13 5,13 z" fill="none" id="bliz9" stroke-width="2" stroke="#777777" />
-        <path class='name-arcsplat2 lig-pos-ridgidsplat2--pos-splat2' d="M 298,364 298,390" fill="#777777" stroke-width="2" stroke="#777777" />
+        <path class="name-ridgidsplat2 lig-pos-trail2--pos-arcsplat2" d="M 292,365 l 6,-13 5,13 z" fill="none" id="bliz9" stroke-width="2" stroke="#777777" />
+        <path class="name-arcsplat2 lig-pos-ridgidsplat2--pos-splat2" d="M 298,364 298,390" fill="#777777" stroke-width="2" stroke="#777777" />
 
-        <path class='name-arcswitch lig-pos-switch' d="M 417,397 427,397" fill="none" stroke-width="2" stroke="#777777" />
+        <path class="name-arcswitch lig-pos-switch" d="M 417,397 427,397" fill="none" stroke-width="2" stroke="#777777" />
 
-        <path class='name-arcpr lig-pos-pr' d="M 417,464 427,464" fill="none" stroke-width="2" stroke="#777777" />
+        <path class="name-arcpr lig-pos-pr" d="M 417,464 427,464" fill="none" stroke-width="2" stroke="#777777" />
 
-        <path class='name-atall lig-pos-po--pos-ridgidopt' d="M 417,517 427,517 427,367 410,367 410,340" fill="none" stroke-width="2" stroke="#777777" />
-        <path class='name-ridgidopt lig-pos-opt--tail-atall' d="M 411,339 l -6,0 5,-15 5,15 z" fill="none" stroke-width="2" stroke="#777777" />
+        <path class="name-atall lig-pos-po--pos-ridgidopt" d="M 417,517 427,517 427,367 410,367 410,340" fill="none" stroke-width="2" stroke="#777777" />
+        <path class="name-ridgidopt lig-pos-opt--tail-atall" d="M 411,339 l -6,0 5,-15 5,15 z" fill="none" stroke-width="2" stroke="#777777" />
 
       </svg>
 
@@ -173,7 +168,38 @@ The grammar you define with OptparseLite defines the [set](/high-concept/terms#s
     </div>
     <div class="clear"></div>
   </div>
+  <div class='slide-controller slide-controller-top-left'>
+    <div class='back-bar back-bar-lvl-1'>&#160;</div>
+    <div class='step step-1'>1</div>
+    <div class='step step-2'>2</div>
+    <div class='step step-3'>3</div>
+    <div class='step step-4'>4</div>
+    <div class='step step-5'>5</div>
+  </div>
+  <div class='slide-controller slide-controller-bottom-left'>
+    <div class='back-bar back-bar-lvl-1'>&#160;</div>
+    <div class='step step-1'>1</div>
+    <div class='step step-2'>2</div>
+    <div class='step step-3'>3</div>
+    <div class='step step-4'>4</div>
+    <div class='step step-5'>5</div>
+  </div>
+
+  <div class='big-button-overlay'>
+    <div class='opaque-backlay'>&#160;</div>
+    <div class='frame'>
+      <div class='banner top-banner'>PUT ON YOUR LEARNING HAT</div>
+      <div class='button-play'>
+        <svg preserveAspectRatio="xMidYMid slice" style="width:100%; height:100%; position:absolute; top:0; left:0px; z-index:0;" version="1.1" xmlns:xlink="http://www.w3.org/1999/xlink" xmlns="http://www.w3.org/2000/svg">
+          <path class='arrow-border' d="M 2,40 C 2,2 2,2 40,2 L 133,2 C 170,2 170,2 170,40 L 170,120 C 170,159 170,159 143,159 L 20,159 C 2,159 2,159 2,120 z" fill="#aaaaaa" stroke='#777777' stroke-width="2" />
+          <path class='arrow' d="M 27,18 l 115,65 -115,65  z" fill="#ffffff" stroke-width="2" stroke="#777777" />
+        </svg>
+      </div>
+      <div class='banner bottom-banner'>AND LET THE AWESOME BEGIN</div>
+    </div>
+  </div>
 </div>
+
 
 You don't have to think of it this way if you're not into that kind of thing.  This is no different from any other option parser; I just wanted to frame the discussion a bit.
 
