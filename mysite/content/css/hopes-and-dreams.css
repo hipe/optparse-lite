@@ -295,3 +295,109 @@
   float: right;
   /* background:#ffbbbb; fun to see */
 }
+#fig-2 .slide-controller {
+  border:1px solid black;
+  height:40px;
+  position:absolute;
+  width:130px;
+}
+#fig-2 .slide-controller-top-left {
+  left:10px;
+  top:10px;
+}
+#fig-2 .slide-controller-bottom-left {
+  left:10px;
+  top:597px;
+}
+#fig-2 .slide-controller .step {
+  -moz-border-radius:7px 7px 7px 7px;
+  -webkit-border-radius: 7px;
+  background:none repeat scroll 0 0 #999999;
+  color:#FFFFFF;
+  cursor: pointer;
+  float:left;
+  font-family:sans-serif;
+  font-size:15px;
+  height:15px;
+  margin:0 2px;
+  padding:0.37px 0 0.25px;
+  text-align:center;
+  width:15px;
+}
+#fig-2 .slide-controller .back-bar {
+  background:none repeat scroll 0 0 #999999;
+  height:6.9px;
+  left:4px;
+  position:absolute;
+}
+#fig-2 .slide-controller .back-bar-lvl-1 {
+  top:3.15px;
+  width:82px;
+  z-index:-1;
+}
+#fig-2 .big-button-overlay {
+  position: absolute;
+  border: 1px solid black;
+  top: 0px;
+  left: 0px;
+	opacity: 1.00;
+  width: 100%;
+  height: 647px;
+  z-index:1;
+}
+#fig-2 .big-button-overlay .opaque-backlay {
+  background: #aaaaaa;
+  position: absolute;
+  top: 0px;
+  left: 0px;
+  width: 100%;
+  height: 100%;
+  z-index: -1;
+	filter: "alpha(opacity=85)";
+	-moz-opacity:0.85;
+	-khtml-opacity: 0.85;
+	opacity: 0.85;
+}
+#fig-2 .big-button-overlay .frame {
+  background: #ffffff;
+  position: absolute;
+  border: 1px solid black;
+  width: 300px;
+  height: 300px;
+  top: 76px;
+  left: 96px;
+  -moz-border-radius: 17px;
+  -webkit-border-radius: 17px;
+}
+#fig-2 .big-button-overlay .banner {
+  -moz-border-radius:6px 6px 6px 6px;
+  background: #aaaaaa;
+  border:1px solid #777777;
+  color: #ffffff;
+  font-family:helvetica,sans-serif;
+  font-weight: 600;
+  left:18px;
+  padding:2.25px;
+  position:absolute;
+  text-align:center;
+  width:251px;
+  -webkit-border-radius: 6px;
+}
+#fig-2 .big-button-overlay .top-banner {
+  top: 20px;
+}
+#fig-2 .big-button-overlay .bottom-banner {
+  left:15px;
+  top:258px;
+  width:267px;
+}
+#fig-2 .big-button-overlay .button-play {
+  /*-moz-border-radius:17px 17px 17px 17px;*/
+  /*border:1px solid black;*/
+  height:160px;
+  left:60px;
+  position:absolute;
+  top:67px;
+  width:171px;
+  /*-webkit-border-radius: 17px;*/
+}
