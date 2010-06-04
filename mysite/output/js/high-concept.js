@@ -4,7 +4,7 @@ jQuery(document).ready(function(){
 	jQuery('.square.app').vizzle_when_you_mouseover_it_changes_color('#66bbff');
 	jQuery('.square').draggable({
 		containment: jQuery('#fig-2'),
-		drag: function(e, ui){ return mgr.dragActual(e, ui); },
+		drag: function(e, ui){ return mgr.dragNotify(e, ui); },
 		cursor: 'crosshair',
 		opacity: 0.10, /* not working ? */
 		revert: true,
@@ -15,8 +15,8 @@ jQuery(document).ready(function(){
 		},
 		scrollSensitivity: 0,
 		scrollSpeed: 5,
-		start: function(e, ui){ return mgr.dragStart(e, ui); },
-		stop: function(e, ui){ return mgr.dragStop(e, ui); },
+		start: function(e, ui){ return mgr.dragStartNotify(e, ui); },
+		stop: function(e, ui){ return mgr.dragStopNotify(e, ui); },
 		zIndex: 1
 	});
 	jQuery.easing.easeNandocCustomExperiment1 = function (x, t, b, c, d) {
