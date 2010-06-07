@@ -166,30 +166,30 @@ The grammar you define with OptparseLite defines the [set](/high-concept/terms#s
       <div class="expl arc-26 mod-meth is-a slide-71">is a kind of</div>
 
     </div>
-    <div class='balloon balloon-1 slide-1-only'>
+    <div class="balloon balloon-1 slide-1-only">
         <p>
         A ruby module has zero or more methods.  (Classes are modules too!)
         </p>
-        <button class='next'>&#187;</button>
+        <button class="next">&#187;</button>
     </div>
-    <div class='balloon balloon-2 slide-6-only'>
+    <div class="balloon balloon-2 slide-6-only">
         <p>A ruby method <em>has many</em> parameters --
         A ruby method signature defines the names (and maybe default values)
         for the zero or more formal parameters it takes.
         (A ruby method call has zero or more arguments.)
         </p>
-        <button class='next'>&#187;</button>
+        <button class="next">&#187;</button>
     </div>
-    <div class='balloon balloon-3 slide-11-only'>
+    <div class="balloon balloon-3 slide-11-only">
         <p>An "options hash" is a <em>kind of</em> method parameter.</p>
         <p>(Ruby has 'syntactic sugar' that allows name-value paired option
         hashes that appear at the end of a method call not to need the curly braces.)
         </p><p>
         So typically, when a method takes an "options hash" it appears as the last parameter.
         </p>
-        <button class='next'>&#187;</button>
+        <button class="next">&#187;</button>
     </div>
-    <div class='balloon balloon-4 slide-16-only'>
+    <div class="balloon balloon-4 slide-16-only">
         <p>An options hash is a <em>kind of</em> method parameter.</p>
         <p>contiguous trailing parameters of a method who take defaults are effectively optional. </p>
         <p>
@@ -197,9 +197,9 @@ The grammar you define with OptparseLite defines the [set](/high-concept/terms#s
         hashes appearing at the end of a method call not need the curly braces.
         So typically, when a method takes an "options hash" it appears as the last parameter.
         </p>
-        <button class='next'>&#187;</button>
+        <button class="next">&#187;</button>
     </div>
-    <div class='balloon balloon-5 slide-21-only'>
+    <div class="balloon balloon-5 slide-21-only">
         <p>One <em>kind of</em> trailing option parameter is a splat.</p>
         <p>(in ruby 1.8.7 the splat must be the last parameter.)</p>
         <p>A splat means that the method can take an infinite number of arguments
@@ -207,94 +207,110 @@ The grammar you define with OptparseLite defines the [set](/high-concept/terms#s
             positional named parameter at the beginning get turned into elements of an
             array that is passed as the effective last parameter of the method call.
         </p>
-        <button class='next'>&#187;</button>
+        <button class="next">&#187;</button>
     </div>
-    <div class='balloon balloon-6 slide-51-only'>
+    <div class="balloon balloon-6 slide-51-only">
         <p>An application interface is made up of <em>many</em> commands.</p>
-        <button class='next'>&#187;</button>
+        <button class="next">&#187;</button>
     </div>
-    <div class='balloon balloon-7 slide-56-only'>
+    <div class="balloon balloon-7 slide-56-only">
         <p>A command <em>has many</em> (positional) arguments.</p>
         <p>It could have zero.  Note this isomorphs with parameters of a method.</p>
-        <button class='next'>&#187;</button>
+        <button class="next">&#187;</button>
     </div>
-    <div class='balloon balloon-8 slide-61-only'>
+    <div class="balloon balloon-8 slide-61-only">
         <p>A command <em>has one (or zero)</em> options structure.</p>
-        <button class='next'>&#187;</button>
+        <button class="next">&#187;</button>
     </div>
-    <div class='balloon balloon-9 slide-66-only'>
+    <div class="balloon balloon-9 slide-66-only">
         <p>One kind of positional argument <em>is a</em> trailing optional argument</p>
-        <button class='next'>&#187;</button>
+        <button class="next">&#187;</button>
     </div>
-    <div class='balloon balloon-10 slide-71-only'>
+    <div class="balloon balloon-10 slide-71-only">
         <p>One kind of trailing optional argument <em>is a</em> splat argument.</p>
         <p><em>Note that if you have any splat argument, you can only have one.</em></p>
-        <button class='next'>&#187;</button>
+        <button class="next">&#187;</button>
     </div>
-    <div class='balloon balloon-11 slide-76-only'>
+    <div class="balloon balloon-11 slide-76-only">
         <p>An options structure (hash) is made up of <em>many</em> options.</p>
         <p><em>(as a hash is made up of many elements)</em></p>
-        <button class='next'>&#187;</button>
+        <button class="next">&#187;</button>
     </div>
-    <div class='balloon balloon-12 slide-81-only'>
+    <div class="balloon balloon-12 slide-81-only">
         <p>One kind of option <em>is a</em> switch (or <em>'flag'</em>)</p>
         <p>This kind of option does not (and cannot) take an argument.</p>
-        <button class='next'>&#187;</button>
+        <button class="next">&#187;</button>
     </div>
-    <div class='balloon balloon-13 slide-86-only'>
+    <div class="balloon balloon-13 slide-86-only">
         <p>Another <em>kind of</em> option is the kind that takes a required parameter.</p>
-        <button class='next'>&#187;</button>
+        <button class="next">&#187;</button>
     </div>
-    <div class='balloon balloon-14 slide-91-only'>
+    <div class="balloon balloon-14 slide-91-only">
         <p>Another <em>kind of</em> option is the kind that takes a parameter optionally.</p>
         <p><em>(These are not the same as options that have default parameters -- an option
             that has a default value is not necessarily valid appearing on its own
             without a parameter.)</em></p>
-        <button class='next'>&#187;</button>
+        <button class="next">&#187;</button>
     </div>
 
 
     <div class="clear"></div>
   </div>
-  <div class='slide-control slide-control-top-left'>
-    <div class='back-bar back-bar-lvl-1'>&#160;</div>
-    <div class='step step-1'>1</div>
-    <div class='step step-2'>2</div>
-    <div class='step step-3'>3</div>
-    <div class='step step-4'>4</div>
-    <div class='step step-5'>5</div>
-    <div class='step step-6'>6</div>
-    <div class='step step-7'>7</div>
-    <div class='step step-8'>8</div>
-    <div class='step step-9'>9</div>
-    <div class='step step-10'>10</div>
-    <div class='step step-11'>11</div>
-
+  <div class="slide-control slide-control-top-left">
+    <div class="back-bar back-bar-lvl-1">&#160;</div>
+    <div class="back-bar back-bar-lvl-2">&#160;</div>
+    <div class="step step-1">1</div>
+    <div class="step step-2">2</div>
+    <div class="step step-3">3</div>
+    <div class="step step-4">4</div>
+    <div class="step step-5">5</div>
+    <div class="step step-6">6</div>
+    <div class="step step-7">7</div>
+    <br/>
+    <div class="step step-8">8</div>
+    <div class="step step-9">9</div>
+    <div class="step step-10">10</div>
+    <div class="step step-11">11</div>
+    <div class="step step-12">12</div>
+    <div class="step step-13">13</div>
+    <div class="step step-14">14</div>
+    <div class="step step-15">15</div>
   </div>
-  <div class='slide-control slide-control-bottom-left'>
-    <div class='back-bar back-bar-lvl-1'>&#160;</div>
-    <div class='step step-1'>1</div>
-    <div class='step step-2'>2</div>
-    <div class='step step-3'>3</div>
-    <div class='step step-4'>4</div>
-    <div class='step step-5'>5</div>
+  <div class="slide-control slide-control-bottom-left">
+    <div class="back-bar back-bar-lvl-1">&#160;</div>
+    <div class="back-bar back-bar-lvl-2">&#160;</div>
+    <div class="step step-1">1</div>
+    <div class="step step-2">2</div>
+    <div class="step step-3">3</div>
+    <div class="step step-4">4</div>
+    <div class="step step-5">5</div>
+    <div class="step step-6">6</div>
+    <div class="step step-7">7</div>
+    <br/>
+    <div class="step step-8">8</div>
+    <div class="step step-9">9</div>
+    <div class="step step-10">10</div>
+    <div class="step step-11">11</div>
+    <div class="step step-12">12</div>
+    <div class="step step-13">13</div>
+    <div class="step step-14">14</div>
+    <div class="step step-15">15</div>
   </div>
 
-  <div class='big-button-overlay'>
-    <div class='opaque-backlay'>&#160;</div>
-    <div class='frame'>
-      <div class='banner top-banner'>PUT ON YOUR LEARNING HAT</div>
-      <div class='button-play'>
+  <div class="big-button-overlay">
+    <div class="opaque-backlay">&#160;</div>
+    <div class="frame">
+      <div class="banner top-banner">PUT ON YOUR LEARNING HAT</div>
+      <div class="button-play">
         <svg preserveAspectRatio="xMidYMid slice" style="width:100%; height:100%; position:absolute; top:0; left:0px; z-index:0;" version="1.1" xmlns:xlink="http://www.w3.org/1999/xlink" xmlns="http://www.w3.org/2000/svg">
-          <path class='arrow-border' d="M 2,40 C 2,2 2,2 40,2 L 133,2 C 170,2 170,2 170,40 L 170,120 C 170,159 170,159 143,159 L 20,159 C 2,159 2,159 2,120 z" fill="#aaaaaa" stroke='#777777' stroke-width="2" />
-          <path class='arrow' d="M 27,18 l 115,65 -115,65  z" fill="#ffffff" stroke-width="2" stroke="#777777" />
+          <path class="arrow-border" d="M 2,40 C 2,2 2,2 40,2 L 133,2 C 170,2 170,2 170,40 L 170,120 C 170,159 170,159 143,159 L 20,159 C 2,159 2,159 2,120 z" fill="#aaaaaa" stroke-width="2" stroke="#777777" />
+          <path class="arrow" d="M 27,18 l 115,65 -115,65  z" fill="#ffffff" stroke-width="2" stroke="#777777" />
         </svg>
       </div>
-      <div class='banner bottom-banner'>AND LET THE AWESOME BEGIN</div>
+      <div class="banner bottom-banner">AND LET THE AWESOME BEGIN</div>
     </div>
   </div>
 </div>
-
 
 
 You don't have to think of it this way if you're not into that kind of thing.  This is no different from any other option parser; I just wanted to frame the discussion a bit.
