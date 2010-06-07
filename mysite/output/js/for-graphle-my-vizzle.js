@@ -526,7 +526,9 @@
 		this.vizzleThingInit(mgr, elem, name);
 		return null;
 	};
-	VizzleRidgidBody.re = new MyRegExp('^M ('+F+'),('+F+')(.+)$', 'rigid body D attr regexp');
+	VizzleRidgidBody.re = new MyRegExp(
+		'^M ('+F+'),('+F+')(.+)$', 'rigid body D attr regexp'
+	);
 
 	VizzleRidgidBody.prototype = jQuery.extend({}, VizzleThingAbstract, {
 		position: function(){
@@ -577,7 +579,7 @@
 	// not special because no need to assert
 	SlideManager.reSlide = new MyRegExp(/\bslide-(\d+)(-only)?/, 'slide');
 	SlideManager.reStep = new MyRegExp(/\bstep-(\d+)/, 'step');
-
+	SlideManager.recognizedThings = ['mouseenter', 'current'];
 	SlideManager.prototype = {
 		setBalloonNextButtons: function(jqElems){
 			var self = this;
@@ -587,9 +589,21 @@
 		},
 		setSlideControls: function(jqElems){
 			var self = this;
-			jqElems.find('.step').click(function(){
-				self.slideClicked(this);
-			});
+			var stepJqElems = jqElems.find('.step');
+			stepJqElems.click(function(){self.stepButtonClick(this);});
+			stepJqElems.mouseenter(function(){self.stepButtonMouseenter(this);});
+			stepJqElems.mouseleave(function(){self.stepButtonMouseleave(this);});
+			this.slideControls = jqElems;
+		},
+		setSlideControlStyle: function(name, stuffs){
+			for (i in stuffs) { // todo are there goddam set operations?
+				if (-1 == SlideManager.recognizedThings.indexOf(i))
+					return this.fail("not ok kind of thing: "+i);
+			}
+			if (!this.slideControlStyles) this.slideControlStyles = {};
+			if (this.slideControlStyles[name]) return this.fail("no: "+name);
+			this.slideControlStyles[name] = stuffs;
+			return null;
 		},
 		slideManagerInit: function(){
 			this.playButtonOverlay = this.elems.find('.big-button-overlay');
@@ -602,8 +616,8 @@
 		},
 		// ############### private #######################
 		balloonNextButtonClicked: function(butt){
-			var butt = jQuery(butt);
-			var classes = butt.parent().attr('class');
+			var jqButt = jQuery(butt);
+			var classes = jqButt.parent().attr('class');
 			var md = SlideManager.reSlide.execAssert(classes);
 			var slideNumber = parseInt(md[1],10);
 			var stepNumberOfThisSlide = this.slideNumberToStepNumber(slideNumber);
@@ -613,13 +627,16 @@
 		fail: commonFailure,
 		// ignoring semi-opaque crap for now
 		goToStep: function(step){
+			if ('number' != typeof(step)) return this.fail("not a number: "+step);
 			if (!this.mapIsSetup) this.setupSlideMap();
+			this.stepButtonChangeCurrentButtonStyle(step);
 			var slideNumberIndex = step - 1;
 			if (slideNumberIndex < 0 ||
 				slideNumberIndex >= this.slideNumbers.length
 			) {
 				return this.fail("invalid step number: "+step);
 			}
+			this.currentStepNumber = step;
 			this.elementsToShow = [];
 			this.elementsToHide = [];
 			var i, j, k, rec, jqEl, isVisible, showIt;
@@ -708,18 +725,79 @@
 			}
 			this.slideNumbers.sort(function(a,b){ return a - b; });
 		},
-		slideClicked: function(slideEl){
-			if (!this.mapIsSetup) this.setupMap();
-			md = SlideManager.reStep.execAssert(slideEl.getAttribute('class'));
-			var step = md[1];
-			this.goToStep(step);
-		},
 		slideNumberToStepNumber: function(slideNumber){
 			var num;
 			if (-1 == (num = this.slideNumbers.indexOf(slideNumber))) {
 				return this.fail("no slides for slide number "+slideNumber);
 			}
 			return num + 1; // index to count
+		},
+		stepButtonChangeCurrentButtonStyle: function(newStepNumber){
+			if (newStepNumber == this.currentStepNumber) return null;
+			if ('number'==typeof(this.currentStepNumber)){
+				this.stepButtonMulticastStyleRevert(this.currentStepNumber);
+			}
+			useThisStyle = this.slideControlStyles['default']['current'];
+			if (!useThisStyle) return null;
+			this.stepButtonMulticastStyleChange(newStepNumber, useThisStyle);
+			return null;
+		},
+		stepButtonClick: function(stepEl){
+			if (!this.mapIsSetup) this.setupMap();
+			this.stepButtonMouseleave(stepEl);
+			var step = this.stepNumberFromElement(stepEl);
+			if (this.currentStepNumber == step) return null;
+			this.goToStep(step);
+			return null;
+		},
+		stepButtonMouseenter: function(stepEl){
+			var step = this.stepNumberFromElement(stepEl);
+			if (this.currentStepNumber == step) return null;
+			var useStyles = this.slideControlStyles['default'];
+			if (!useStyles) return null;
+			var useStyle = useStyles.mouseenter;
+			if (!useStyle) return null;
+			this.stepButtonMulticastStyleChange(step, useStyle);
+			return null;
+		},
+		// careful this is called at click to restore styles!
+		stepButtonMouseleave: function(stepEl){
+			var step = this.stepNumberFromElement(stepEl);
+			if (this.currentStepNumber == step) return null;
+			this.stepButtonMulticastStyleRevert(step);
+			return null;
+		},
+		stepButtonMulticastStyleChange: function(step, useStyle, rememberStyle){
+			if (undefined===rememberStyle) rememberStyle = true;
+			var cssClass = ".step-"+step;
+			var jqElems = this.slideControls.find(cssClass);
+			jqElems.each(function(){
+				var jqEl = jQuery(this);
+				if (rememberStyle) {
+					var rememberStyles = {};
+					for (var i in useStyle){
+						rememberStyles[i] = jqEl.css(i);
+					}
+					jqEl.data('previousStyleInfo', rememberStyles);
+				}
+				jqEl.css(useStyle);
+			});
+		},
+		stepButtonMulticastStyleRevert: function(step){
+			var cssClass = '.step-'+step;
+			var jqElems = this.slideControls.find(cssClass);
+			jqElems.each(function(){
+				var jqEl = jQuery(this);
+				var prevStyle = jqEl.data('previousStyleInfo');
+				if (!prevStyle) return;
+				jqEl.css(prevStyle);
+				jqEl.data('previousStyleInfo', null);
+			});
+		},
+		stepNumberFromElement: function(stepEl){
+			md = SlideManager.reStep.execAssert(stepEl.getAttribute('class'));
+			var step = parseInt(md[1], 10);
+			return step;
 		}
 	};
 
@@ -767,7 +845,6 @@
 			}
 		};
 		func();
-		return null;
 	};
 	var tardNuggetSetOpacity = function(el, newOpacity){
 		if (newOpacity < 0.0 || newOpacity > 1.0 ) {
