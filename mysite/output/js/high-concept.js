@@ -33,14 +33,17 @@ jQuery(document).ready(function(){
 		mouseenter: {
 			border: '2px solid #999999',
 			color: '#333333',
-			background: '#dddddd',
+			'background-color': '#dddddd',
 			width: '11px',
 			height: '11px'
 		},
 		current: {
-			background: '#ffffff',
+			'background-color': '#ffffff',
 			border: '2px solid #333333',
 			color: '#333333'
+		},
+		obscured: {
+			color: '#999999'
 		}
 	});
 	slideMgr.setSlideControls(jQuery('#fig-2 .slide-control'), 'default');
