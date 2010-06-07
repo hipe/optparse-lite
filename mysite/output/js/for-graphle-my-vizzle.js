@@ -1,5 +1,5 @@
 (function(){
-	jQuery.fn.vizzle_when_you_mouseover_it_changes_color = 
+	jQuery.fn.vizzle_when_you_mouseover_it_changes_color =
 		function(bgColor, opts) {
 			return this.each(function(){
 			var someFucker = jQuery(this);
@@ -15,6 +15,22 @@
 			});
 			someFucker.mouseleave(function(){
 				lowlight();
+			});
+		});
+	};
+
+	jQuery.fn.vizzle_mouseenter = function(newStyle){
+		return this.each(function(){
+			var someFucker = jQuery(this);
+			var coolStyle = {};
+			for (var i in newStyle) {
+				coolStyle[i] = someFucker.css(i);
+			}
+			someFucker.mouseenter(function(){
+				someFucker.css(newStyle);
+			});
+			someFucker.mouseleave(function(){
+				someFucker.css(coolStyle);
 			});
 		});
 	};
@@ -554,13 +570,29 @@
 			this.distY = this.posNow.top - this.posHome.top;
 		}
 	});
-	var SlideManager = function(elem){
-		this.elem = elem;
+	var SlideManager = function(elems){
+		this.elems = elems;
 		this.slideManagerInit();
 	};
+	// not special because no need to assert
+	SlideManager.reSlide = new MyRegExp(/\bslide-(\d+)(-only)?/, 'slide');
+	SlideManager.reStep = new MyRegExp(/\bstep-(\d+)/, 'step');
+
 	SlideManager.prototype = {
+		setBalloonNextButtons: function(jqElems){
+			var self = this;
+			jqElems.click(function(){
+				self.balloonNextButtonClicked(this);
+			});
+		},
+		setSlideControls: function(jqElems){
+			var self = this;
+			jqElems.find('.step').click(function(){
+				self.slideClicked(this);
+			});
+		},
 		slideManagerInit: function(){
-			this.playButtonOverlay = this.elem.find('.big-button-overlay');
+			this.playButtonOverlay = this.elems.find('.big-button-overlay');
 			mylog("PBO"); PBO = this.playButtonOverlay;
 			this.frame = this.playButtonOverlay.find('.frame');
 			var self = this;
@@ -568,29 +600,144 @@
 				self.playWasClicked(e);
 			});
 		},
-		// private
+		// ############### private #######################
+		balloonNextButtonClicked: function(butt){
+			var butt = jQuery(butt);
+			var classes = butt.parent().attr('class');
+			var md = SlideManager.reSlide.execAssert(classes);
+			var slideNumber = parseInt(md[1],10);
+			var stepNumberOfThisSlide = this.slideNumberToStepNumber(slideNumber);
+			var nextStepNumber = stepNumberOfThisSlide + 1;
+			this.goToStep(nextStepNumber);
+		},
 		fail: commonFailure,
+		// ignoring semi-opaque crap for now
+		goToStep: function(step){
+			if (!this.mapIsSetup) this.setupSlideMap();
+			var slideNumberIndex = step - 1;
+			if (slideNumberIndex < 0 ||
+				slideNumberIndex >= this.slideNumbers.length
+			) {
+				return this.fail("invalid step number: "+step);
+			}
+			this.elementsToShow = [];
+			this.elementsToHide = [];
+			var i, j, k, rec, jqEl, isVisible, showIt;
+			var last = this.slideNumbers.length - 1;
+			for (i=0; i<=last; i++) { // could be faster, more code
+				j = this.slideNumbers[i];
+				k = this.slides[j].length;
+				while (k--) {
+					rec = this.slides[j][k];
+					jqEl = rec.jqElem;
+					isVisible = ('none' != jqEl.css('display'));
+					showIt = null;
+					if (rec.only) {
+						if (i == slideNumberIndex) {
+							if (!isVisible) showIt = true;
+						} else {
+							if (isVisible) showIt = false;
+						}
+					} else if (i <= slideNumberIndex) {
+						if (!isVisible) showIt = true;
+					} else {
+						if (isVisible) showIt = false;
+					}
+					if (null!==showIt) {
+						this[showIt ? 'elementsToShow' : 'elementsToHide'].push(jqEl[0]);
+					}
+				}
+			}
+			// hide all visible elements who have
+			this.runTransition();
+			return null;
+		},
+		mapIsSetup: false,
 		mylog: mylog,
 		playWasClicked: function(e){
 			var pbo = this.playButtonOverlay;
-			tardNuggetFadeTo(pbo, 
-				444, 0.0, function(){pbo.css('display','none');});
+			var self = this;
+			tardNuggetFadeTo(pbo,
+				444, 0.0, function(){
+					pbo.css('display','none');
+					self.goToStep(1);
+				}
+			);
+		},
+		runTransition: function(){
+			var hideThese = jQuery(this.elementsToHide);
+			var showThese = jQuery(this.elementsToShow);
+			tardNuggetFadeTo(hideThese, 444, 0.0, function(){
+				hideThese.css('display','none'); }
+			);
+			showThese.css('display', 'block');
+			tardNuggetSetOpacity(showThese, 0.0);
+			tardNuggetFadeTo(showThese, 444, 1.0);
+		},
+		/**
+		* with each and every element we do this crap b/c a) we can't easily crawl
+		* into svg elements with jquery selectors and b) it's too much visual
+		* noise to say 'class ="slide slide-1"'
+		* @post set this.slides and this.slideNumbers
+		* we don't like that we are creating an individual jqElem array object for
+		* each individual element but a) we need to use it to get the css.display
+		* style attribute value and b) we can't group these together yet b/c their
+		* individual visibility will change
+		*/
+		setupSlideMap: function(){
+			this.mylog("setting up map");
+			this.mapIsSetup = true;
+			var all = this.elems.find('*'), matched = [],
+				re = SlideManager.reSlide.regexp;
+			var i = all.length;
+			this.slides = [];
+			this.slideNumbers = [];
+			while (i--) {
+				if (!(md=re.exec(all[i].getAttribute('class')))) continue;
+				var slideIdx = parseInt(md[1], 10);
+				if (!this.slides[slideIdx]) {
+					this.slides[slideIdx] = [];
+					this.slideNumbers.push(slideIdx);
+				}
+				// although opacity is all whacked up with jqElem.css('opacity'),
+				// we need to use jqElem to read 'display':'none' so we incur this
+				// overhead
+				var record = {jqElem : jQuery(all[i])};
+				if (md[2]) { record.only = true; }
+				this.slides[slideIdx].push(record);
+			}
+			this.slideNumbers.sort(function(a,b){ return a - b; });
+		},
+		slideClicked: function(slideEl){
+			if (!this.mapIsSetup) this.setupMap();
+			md = SlideManager.reStep.execAssert(slideEl.getAttribute('class'));
+			var step = md[1];
+			this.goToStep(step);
+		},
+		slideNumberToStepNumber: function(slideNumber){
+			var num;
+			if (-1 == (num = this.slideNumbers.indexOf(slideNumber))) {
+				return this.fail("no slides for slide number "+slideNumber);
+			}
+			return num + 1; // index to count
 		}
 	};
 
-	/* wicked hack that shouldn't be here, but div.style it's not exist in xml 
+	/* wicked hack that shouldn't be here, but div.style it's not exist in xml
 		so we don't have a working fadeTo(), etc
 		@param (int) duration in ms
 		@param (float) final between 0 and 1, 0 being transparent 1 being opaque
 	*/
 	var tardNuggetFadeTo = function(el, duration, toOpacity, callback){
+		if (el.length == 0) return;
 		if ("number" != typeof(duration) || duration < 0)
 		 	return commonFailure("bad duration: "+duration);
 		if ("number" != typeof(toOpacity) || toOpacity < 0.0 || toOpacity > 1.0)
 		 	return commonFailure("bad opacity: "+toOpacity);
 		var currentOpacity = el.css('opacity');
-		if (! (/^\d+(?:\.\d+)?$/).test(currentOpacity))
+		if (! (/^\d+(?:\.\d+)?$/).test(currentOpacity)) {
 			return commonFailure("i don't like this opacity: "+currentOpacity);
+		}
 		var fromOpacity = parseFloat(currentOpacity);
 		var msPerStep = 1000/24; // 24 fps
 		var numSteps = parseInt(duration / msPerStep, 10);
@@ -603,27 +750,36 @@
 		func = function(){
 			var nextOpacity = fromOpacity + opacityStep;
 			fromOpacity = nextOpacity;
-			var crazy = {
-				'-moz-opacity' : nextOpacity,
-				'filter' : ('alpha(opacity='+(parseInt(nextOpacity*100, 10))+')'),
-				'-khtml-opacity' : nextOpacity,
-				'opacity' : nextOpacity
-			};
-			// with floating point fuzziness there's really no good way ..? 
+			// with floating point fuzziness there's really no good way ..?
 			var opacityOk = (nextOpacity >= 0.0 && nextOpacity <= 1.0 &&
 				! (/e/).test(''+nextOpacity)); // avoid numbs with scientific notation
-			if (opacityOk) { 
-				mylog("about to do this one: "+nextOpacity);
-				el.css(crazy); 
+			if (opacityOk) {
+				//mylog("about to do this one: "+nextOpacity);
+				tardNuggetSetOpacity(el, nextOpacity);
 			}
 			currStep ++;
 			if (currStep < numSteps && opacityOk) {
 				setTimeout(func, msPerStep);
 			} else {
-				setTimeout(callback, msPerStep+17); // whatever gah
+				if (callback) {
+					setTimeout(callback, msPerStep+17); // whatever gah
+				}
 			}
 		};
 		func();
+		return null;
+	};
+	var tardNuggetSetOpacity = function(el, newOpacity){
+		if (newOpacity < 0.0 || newOpacity > 1.0 ) {
+			return commonFail("bad opacity: "+newOpacity);
+		}
+		var crazy = {
+			'-moz-opacity' : newOpacity,
+			'filter' : ('alpha(opacity='+(parseInt(newOpacity*100, 10))+')'),
+			'-khtml-opacity' : newOpacity,
+			'opacity' : newOpacity
+		};
+		el.css(crazy);
 		return null;
 	};
 
