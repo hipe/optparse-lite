@@ -307,7 +307,12 @@
 }
 #fig-2 .slide-control-bottom-left {
   left:10px;
-  top:584px;
+  top:600px;
+  width:100%;
+}
+#fig-2 .slide-control-bottom-left .fix {
+  float: left;
+  position:relative;
 }
 #fig-2 .slide-control .step {
   -moz-border-radius:7px 7px 7px 7px;
@@ -338,6 +343,11 @@
 #fig-2 .slide-control .back-bar-lvl-2 {
   top:20px;
   width:113px;
+  z-index:-1;
+}
+#fig-2 .slide-control .back-bar-wide {
+  top:3.4px;
+  width:97%;
   z-index:-1;
 }
 #fig-2 .balloon {
