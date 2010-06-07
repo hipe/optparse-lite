@@ -1,3 +1,13 @@
+.ruby {
+  -moz-border-radius: 4px !important;
+  -webkit-border-radius: 4px !important;
+  font-size: 0.85em !important;
+  margin:1em 0 1.5em !important;
+  padding: 0.5em !important;
+}
+.example-smaller {
+  width:191px;
+}
 .crazy-pic .caption{
   font-style:italic;
   padding-top:0.25em;
@@ -104,7 +114,7 @@
   position: absolute;
   width: 120px;
 }
-#fig-2 .ruby {
+#fig-2 .ruby-construct {
   -webkit-border-radius:6px;
   -moz-border-radius:6px 6px 6px 6px;
   background:none repeat scroll 0 0 #FF99EE;
@@ -360,8 +370,16 @@
   position:absolute;
 }
 #fig-2 .balloon .next {
-  float:right;
+  bottom:11px;
   font-size:15px;
+  position:absolute;
+  right:10px;
+}
+#fig-2 .spacer-gif {
+  height: 32px;
+}
+#fig-2 .balloon button.lower {
+  clear: both; /* doesn't help */
 }
 #fig-2 .balloon-1 {
   left:164px;
@@ -380,12 +398,12 @@
 }
 #fig-2 .balloon-4 {
   left:164px;
-  top:241px;
+  top:0px;
   width:254px;
 }
 #fig-2 .balloon-5 {
   left:164px;
-  top:241px;
+  top:183px;
   width:254px;
 }
 #fig-2 .balloon-6 {
@@ -395,12 +413,12 @@
 }
 #fig-2 .balloon-7 {
   left:0px;
-  top:40px;
+  top:117px;
   width:254px;
 }
 #fig-2 .balloon-8 {
   left:0px;
-  top:172px;
+  top:139px;
   width:254px;
 }
 #fig-2 .balloon-9 {
@@ -422,15 +440,17 @@
   left:0px;
   top:366px;
   width:254px;
+  z-index: 1; /* display on top of the remote control for this one */
 }
 #fig-2 .balloon-13 {
   left:0px;
-  top:400px;
+  top:353px;
   width:254px;
+  z-index: 1; /* ibid. */
 }
 #fig-2 .balloon-14 {
   left:0px;
-  top:361px;
+  top:193px;
   width:254px;
 }
 #fig-2 .big-button-overlay {
