@@ -29,14 +29,21 @@ jQuery(document).ready(function(){
 	var slideMgr = jQuery.vizzle.newSlideManager(jQuery('#fig-2'));
 
 	// ############### this is stuff for the several(?) "remote controls"
-	jQuery('#fig-2 .step').vizzle_mouseenter({
-		border: '2px solid #999999',
-		color: '#333333',
-		background: '#dddddd',
-		width: '11px',
-		height: '11px'
+	slideMgr.setSlideControlStyle('default', {
+		mouseenter: {
+			border: '2px solid #999999',
+			color: '#333333',
+			background: '#dddddd',
+			width: '11px',
+			height: '11px'
+		},
+		current: {
+			background: '#ffffff',
+			border: '2px solid #333333',
+			color: '#333333'
+		}
 	});
-	slideMgr.setSlideControls(jQuery('#fig-2 .slide-control'));
+	slideMgr.setSlideControls(jQuery('#fig-2 .slide-control'), 'default');
 	slideMgr.setBalloonNextButtons(jQuery('#fig-2 .balloon .next'));
 
 	// ############## the below chunk is just for animating the big button ####
