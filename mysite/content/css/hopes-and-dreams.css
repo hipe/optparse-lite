@@ -295,21 +295,21 @@
   float: right;
   /* background:#ffbbbb; fun to see */
 }
-#fig-2 .slide-controller {
+#fig-2 .slide-control {
   border:1px solid black;
   height:40px;
   position:absolute;
   width:130px;
 }
-#fig-2 .slide-controller-top-left {
+#fig-2 .slide-control-top-left {
   left:10px;
   top:10px;
 }
-#fig-2 .slide-controller-bottom-left {
+#fig-2 .slide-control-bottom-left {
   left:10px;
   top:597px;
 }
-#fig-2 .slide-controller .step {
+#fig-2 .slide-control .step {
   -moz-border-radius:7px 7px 7px 7px;
   -webkit-border-radius: 7px;
   background:none repeat scroll 0 0 #999999;
@@ -324,16 +324,99 @@
   text-align:center;
   width:15px;
 }
-#fig-2 .slide-controller .back-bar {
+#fig-2 .slide-control .back-bar {
   background:none repeat scroll 0 0 #999999;
   height:6.9px;
   left:4px;
   position:absolute;
 }
-#fig-2 .slide-controller .back-bar-lvl-1 {
+#fig-2 .slide-control .back-bar-lvl-1 {
   top:3.15px;
   width:82px;
   z-index:-1;
+}
+#fig-2 .balloon {
+  -moz-border-radius:6px 6px 6px 6px;
+  background:none repeat scroll 0 0 #DDDDDD;
+  border:2px solid #777777;
+  display: none;
+  font-family: monospace;
+  padding:0.5em;
+  position:absolute;
+}
+#fig-2 .balloon .next {
+  float:right;
+  font-size:15px;
+}
+#fig-2 .balloon-1 {
+  left:164px;
+  top:0;
+  width:254px;
+}
+#fig-2 .balloon-2 {
+  left:164px;
+  top:72px;
+  width:254px;
+}
+#fig-2 .balloon-3 {
+  left:164px;
+  top:114px;
+  width:254px;
+}
+#fig-2 .balloon-4 {
+  left:164px;
+  top:241px;
+  width:254px;
+}
+#fig-2 .balloon-5 {
+  left:164px;
+  top:241px;
+  width:254px;
+}
+#fig-2 .balloon-6 {
+  left:0px;
+  top:0px;
+  width:254px;
+}
+#fig-2 .balloon-7 {
+  left:0px;
+  top:40px;
+  width:254px;
+}
+#fig-2 .balloon-8 {
+  left:0px;
+  top:172px;
+  width:254px;
+}
+#fig-2 .balloon-9 {
+  left:0px;
+  top:247px;
+  width:254px;
+}
+#fig-2 .balloon-10 {
+  left:0px;
+  top:326px;
+  width:254px;
+}
+#fig-2 .balloon-11 {
+  left:0px;
+  top:297px;
+  width:254px;
+}
+#fig-2 .balloon-12 {
+  left:0px;
+  top:366px;
+  width:254px;
+}
+#fig-2 .balloon-13 {
+  left:0px;
+  top:400px;
+  width:254px;
+}
+#fig-2 .balloon-14 {
+  left:0px;
+  top:361px;
+  width:254px;
 }
 #fig-2 .big-button-overlay {
   position: absolute;
