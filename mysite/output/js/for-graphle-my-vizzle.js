@@ -317,9 +317,7 @@
 							this.processLig(elem, md, lastName);
 						}
 					} else {
-						// we will almost certainly want to ignore non-magic
-						// class names one day but for now we bark
-						this.mylog("whuh: "+cls);
+						// it's ok for lig svg elements to have non-magic classnames
 					}
 				}
 			}
@@ -579,7 +577,7 @@
 	// not special because no need to assert
 	SlideManager.reSlide = new MyRegExp(/\bslide-(\d+)(-only)?/, 'slide');
 	SlideManager.reStep = new MyRegExp(/\bstep-(\d+)/, 'step');
-	SlideManager.recognizedThings = ['mouseenter', 'current'];
+	SlideManager.recognizedThings = ['current', 'obscured', 'mouseenter'];
 	SlideManager.prototype = {
 		setBalloonNextButtons: function(jqElems){
 			var self = this;
@@ -629,14 +627,14 @@
 		goToStep: function(step){
 			if ('number' != typeof(step)) return this.fail("not a number: "+step);
 			if (!this.mapIsSetup) this.setupSlideMap();
-			this.stepButtonChangeCurrentButtonStyle(step);
+			this.stepButtonChangeButtonsPerCurrent(step);
 			var slideNumberIndex = step - 1;
 			if (slideNumberIndex < 0 ||
 				slideNumberIndex >= this.slideNumbers.length
 			) {
 				return this.fail("invalid step number: "+step);
 			}
-			this.currentStepNumber = step;
+			this.currentStepNumber = step;//after stepButtonChangeButtonsPerCurrent
 			this.elementsToShow = [];
 			this.elementsToHide = [];
 			var i, j, k, rec, jqEl, isVisible, showIt;
@@ -732,14 +730,21 @@
 			}
 			return num + 1; // index to count
 		},
-		stepButtonChangeCurrentButtonStyle: function(newStepNumber){
+		// currentStepNumber is ok
+		stepButtonChangeButtonsPerCurrent: function(newStepNumber){
+			if (!this.storedUnfuctButtonStyles) this.stepButtonStoreUnfuctStyles();
 			if (newStepNumber == this.currentStepNumber) return null;
 			if ('number'==typeof(this.currentStepNumber)){
-				this.stepButtonMulticastStyleRevert(this.currentStepNumber);
+				this.stepButtonMulticastStyleRevert(
+					this.currentStepNumber, 'beforeCurrent'
+				);
 			}
-			useThisStyle = this.slideControlStyles['default']['current'];
+			var useThisStyle = this.slideControlStyles['default']['current'];
 			if (!useThisStyle) return null;
-			this.stepButtonMulticastStyleChange(newStepNumber, useThisStyle);
+			this.stepButtonMulticastStyleChange(
+				newStepNumber, useThisStyle, 'beforeCurrent'
+			);
+			this.stepButtonObscurity(newStepNumber);
 			return null;
 		},
 		stepButtonClick: function(stepEl){
@@ -757,18 +762,17 @@
 			if (!useStyles) return null;
 			var useStyle = useStyles.mouseenter;
 			if (!useStyle) return null;
-			this.stepButtonMulticastStyleChange(step, useStyle);
+			this.stepButtonMulticastStyleChange(step, useStyle, 'beforeMouseenter');
 			return null;
 		},
 		// careful this is called at click to restore styles!
 		stepButtonMouseleave: function(stepEl){
 			var step = this.stepNumberFromElement(stepEl);
 			if (this.currentStepNumber == step) return null;
-			this.stepButtonMulticastStyleRevert(step);
+			this.stepButtonMulticastStyleRevert(step, 'beforeMouseenter');
 			return null;
 		},
 		stepButtonMulticastStyleChange: function(step, useStyle, rememberStyle){
-			if (undefined===rememberStyle) rememberStyle = true;
 			var cssClass = ".step-"+step;
 			var jqElems = this.slideControls.find(cssClass);
 			jqElems.each(function(){
@@ -778,21 +782,54 @@
 					for (var i in useStyle){
 						rememberStyles[i] = jqEl.css(i);
 					}
-					jqEl.data('previousStyleInfo', rememberStyles);
+					jqEl.data(rememberStyle, rememberStyles);
 				}
 				jqEl.css(useStyle);
 			});
 		},
-		stepButtonMulticastStyleRevert: function(step){
+		stepButtonMulticastStyleRevert: function(step, whichStoredStyle){
 			var cssClass = '.step-'+step;
 			var jqElems = this.slideControls.find(cssClass);
-			jqElems.each(function(){
-				var jqEl = jQuery(this);
-				var prevStyle = jqEl.data('previousStyleInfo');
-				if (!prevStyle) return;
+			var i = jqElems.length;
+			while (i--) {
+				var jqEl = jQuery(jqElems[i]);
+				var prevStyle = jqEl.data(whichStoredStyle);
+				if (!prevStyle) continue;
 				jqEl.css(prevStyle);
-				jqEl.data('previousStyleInfo', null);
-			});
+				//jqEl.data(whichStoredStyle, null); // always keep unfuct
+			};
+		},
+		stepButtonStoreUnfuctStyles: function(){
+			var steps = this.slideControls.find('.step');
+			var wierd = [];
+			for (var i in this.slideControlStyles['default']) {
+				for (var j in this.slideControlStyles['default'][i]) {
+					if (-1 == wierd.indexOf(j)) wierd.push(j);
+				}
+			}
+			i = steps.length;
+			while (i--) {
+				var el = jQuery(steps[i]);
+				var storeMe = {};
+				for (j in wierd) {
+					var k = wierd[j];
+					storeMe[k] = el.css(k);
+				}
+				el.data('unfuctStyle', storeMe);
+			}
+			this.storedUnfuctButtonStyles = true;
+		},
+		stepButtonObscurity: function(stepNumber){
+			var useThisStyle = this.slideControlStyles['default']['obscured'];
+			if (!useThisStyle) return null;
+			var lastSlideNumber = this.slides.length;
+			for (var i=this.currentStepNumber; i < stepNumber; i++) {
+				this.stepButtonMulticastStyleRevert(i, 'unfuctStyle');
+			}
+			for (i=stepNumber+1; i<=lastSlideNumber; i++) {
+				this.stepButtonMulticastStyleChange(i, useThisStyle);
+			}
+			return null;
 		},
 		stepNumberFromElement: function(stepEl){
 			md = SlideManager.reStep.execAssert(stepEl.getAttribute('class'));
