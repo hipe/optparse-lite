@@ -59,13 +59,13 @@ OptparseLite (at least partially) parses a stream of input characters, turns the
   </div>
 </div>
 
-Conceptually these loci are usually referred to as `command`s.  In practice it makes good sense for them to be implemented by ruby methods, which form a clean analog / isomorphicism with cli commands for several reasons expounded on below with vivid math.[^nomod]
+Conceptually these loci are usually referred to as `command`s.  In practice it makes good sense for them to be implemented by ruby methods, which form a clean analog / isomorphism with [cli](/high-concept/terms#cli) commands for several reasons expounded on below with vivid math.[^nomod]
 
 None of this is especially unique to OptparseLite, but it is important that we frame the discussion in these terms to understand this important emerging field of command line processing.
 
-However note that most option parsing libraries don't need to address some of the below issues because they don't deal with _what_ the commands are, they just deal with parsing the options _of_ the command(s).[^nocom]
+However note that most option parsing libraries don't need to address all below issues because they don't deal with _what_ the commands are, they just deal with parsing the options _of_ the command(s).[^nocom]
 
-It is a philosophical burden that OptparseLite alone must bear on its narrowly set but ample shoulders; because unlike its peers it cannot remain blissfully ignorant of the exquisite symphony of the stars that governs the motion of planets of data guided as they are by their gravitational forces of logic along their predetermined (and sometimes determinate) paths in the infinite tango that plays out below our fingertips daily.
+It is thus a philosophical burden of proof that OptparseLite alone bears on its narrow but ample shoulders; because unlike its peers it cannot remain blissfully ignorant of the exquisite symphony of the stars that governs the motion of planets of data guided as they are by their gravitational forces of logic along their predetermined (and sometimes determinate) paths in the infinite tango that plays out below our fingertips daily.
 
 ### modules can model user interfaces
 
