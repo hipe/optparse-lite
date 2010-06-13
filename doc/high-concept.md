@@ -21,36 +21,40 @@ javascripts-off: [/vendor/jquery-1.3.js]
 
 OptparseLite (at least partially) parses a stream of input characters, turns them into a parse tree[^tree] of a request and dispatches it to the appropriate locus of logic which fulfills the user's wishes and presents a response in the form of the user's fulfilled dreams _(fig. 1)_.
 
-<div id='fig-1' class='crazy-pic'>
-  <div class='wrap-1'>
-    <div class='wrap-2'>
-      <div class='you box'><div class='label'>you</div></div>
-      <div class='opl box'><div class='label'>app</div></div>
+<div class="crazy-pic" id="fig-1">
+  <div class="wrap-1">
+    <div class="wrap-2">
+      <div class="you box"><div class="label">you</div></div>
+      <div class="opl box"><div class="label">app</div></div>
     </div>
-    <div class='backlay'>
-      <svg xmlns="http://www.w3.org/2000/svg"
-        xmlns:xlink="http://www.w3.org/1999/xlink"
-        version="1.1"
-        preserveAspectRatio="xMidYMid slice"
-        style="width:100%; height:100%; position:absolute; top:0; left:2px; z-index:-1;">
-        <path id="arrow1" d="M100,30 C 120,20 160,20 188,30 l0,-10 l10,18 l-16,14 l4,-12 C 160,30 120,30 103,40 L100,30 " stroke="#777777" stroke-width="2" fill="#cceeff" />
+    <div class="backlay">
+      <svg preserveAspectRatio="xMidYMid slice" style="width:100%; height:100%; position:absolute; top:0; left:2px; z-index:-1;" version="1.1" xmlns:xlink="http://www.w3.org/1999/xlink" xmlns="http://www.w3.org/2000/svg">
+        <g id='thing-to-spin' transform='rotate(0, 0, 0)'>
+          <path d="M100,30 C 120,20 160,20 188,30 l0,-10 l10,18 l-16,14 l4,-12 C 160,30 120,30 103,40 L100,30 " fill="#cceeff" id="arrow1" stroke-width="2" stroke="#777777" />
 
-        <path id="arrow2" d="M188,68 C 160,78 140,78 110,68 L 110,80 102,60 115,44 111,58 C 140,67 170,67 185,58 z" stroke="#777777" stroke-width="2" fill="#cceeff" />
+          <path d="M188,68 C 160,78 140,78 110,68 L 110,80 102,60 115,44 111,58 C 140,67 170,67 185,58 z" fill="#cceeff" id="arrow2" stroke-width="2" stroke="#777777" />
 
-        <path id="words2" d="M110,65 C 140,75 160,75 188,65" fill='none' stroke='none' />
+          <path d="M110,65 C 140,75 160,75 188,65" fill="none" id="words2" stroke="none" />
 
-        <text font-size="10.5" fill="black">
-          <textPath xlink:href="#words2">&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;dreams</textPath>
-        </text>
+          <text fill="black" font-size="10.5">
+            <textPath xlink:href="#words2">&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;dreams</textPath>
+          </text>
 
-        <path id="words1" d="M100,37 C 120,29 138,24 180,37" fill='none' stroke='none' />
-        <text font-size="10.5" fill="black">
-          <textPath xlink:href="#words1">&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;wishes</textPath>
-        </text>
+          <path d="M100,37 C 120,29 138,24 180,37" fill="none" id="words1" stroke="none" />
+          <text fill="black" font-size="10.5">
+            <textPath xlink:href="#words1">&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;wishes</textPath>
+          </text>
+        </g>
       </svg>
     </div>
+    <div class='click-overlay'>
+      <div class='left-half'>
+      </div>
+      <div class='right-half'>
+      </div>
+    </div>
   </div>
-  <div class='caption'>
+  <div class="caption">
     fig. 1 - apps turn your wishes into dreams
   </div>
 </div>
