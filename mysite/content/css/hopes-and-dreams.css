@@ -67,6 +67,28 @@
 #fig-1 .opl{
   right: 10px;
 }
+#fig-1 .click-overlay{
+  cursor: pointer;
+  height:100%;
+  left:0;
+  position:absolute;
+  top:0;
+  width:100%;
+}
+#fig-1 .click-overlay .left-half{
+  position: absolute;
+  height: 100%;
+  left: 0;
+  top: 0;
+  width: 50%;
+}
+#fig-1 .click-overlay .right-half{
+  position: absolute;
+  height: 100%;
+  left: 50%;
+  top: 0;
+  width: 50%;
+}
 #fig-2 {
   -moz-border-radius:6px 6px 6px 6px;
   -webkit-border-radius:6px;
