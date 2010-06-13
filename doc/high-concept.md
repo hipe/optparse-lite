@@ -120,12 +120,12 @@ The grammar you define with OptparseLite defines the [set](/high-concept/terms#s
     </div>
     <div class="left-col">
 
-      <div class="mod   ruby square short slide-1">ruby module</div>
-      <div class="meth  ruby square short slide-1">public method</div>
-      <div class="param ruby square dubs slide-6" style="width: 81px">method parameter</div>
-      <div class="opts  ruby square short slide-11">option hash</div>
-      <div class="trail ruby square slide-16">trailing optional parameter</div>
-      <div class="splat ruby square slide-21">splat</div>
+      <div class="mod   ruby-construct square short slide-1">ruby module</div>
+      <div class="meth  ruby-construct square short slide-1">public method</div>
+      <div class="param ruby-construct square dubs slide-6" style="width: 81px">method parameter</div>
+      <div class="opts  ruby-construct square short slide-11">option hash</div>
+      <div class="trail ruby-construct square slide-16">trailing optional parameter</div>
+      <div class="splat ruby-construct square slide-21">splat</div>
 
       <div class="expl arc-1 mod-meth has-many slide-1">has many</div>
       <div class="expl arc-2 mod-meth has-many slide-6">has many</div>
@@ -170,35 +170,80 @@ The grammar you define with OptparseLite defines the [set](/high-concept/terms#s
         <p>
         A ruby module has zero or more methods.  (Classes are modules too!)
         </p>
+<pre class='ruby example-smaller'><span class="keyword">module </span><span class="module">SomeModule</span>
+  <span class="keyword">def </span><span class="method">foo</span>
+  <span class="keyword">end</span>
+  <span class="keyword">def </span><span class="method">bar</span>
+  <span class="keyword">end</span>
+<span class="keyword">end</span>
+</pre>
         <button class="next">&#187;</button>
     </div>
+
+
+
     <div class="balloon balloon-2 slide-6-only">
         <p>A ruby method <em>has many</em> parameters --
         A ruby method signature defines the names (and maybe default values)
         for the zero or more formal parameters it takes.
         (A ruby method call has zero or more arguments.)
         </p>
+<pre class='ruby example-smaller'><span class="keyword">def </span><span class="method">foo</span> <span class="ident">arg1</span><span class="punct">,</span> <span class="ident">arg2</span><span class="punct">='</span><span class="string">blah</span><span class="punct">'</span>
+  <span class="comment"># do some foo...</span>
+<span class="keyword">end</span>
+</pre>
         <button class="next">&#187;</button>
     </div>
-    <div class="balloon balloon-3 slide-11-only">
+
+
+
+
+    <div class="balloon balloon-3 slide-11-only" style='width: 268px'>
         <p>An "options hash" is a <em>kind of</em> method parameter.</p>
-        <p>(Ruby has 'syntactic sugar' that allows name-value paired option
-        hashes that appear at the end of a method call not to need the curly braces.)
-        </p><p>
-        So typically, when a method takes an "options hash" it appears as the last parameter.
-        </p>
+<pre class='ruby' style='width: 257px'><span class="keyword">def </span><span class="method">foo</span> <span class="ident">arg1</span><span class="punct">,</span> <span class="ident">opts</span><span class="punct">={}</span>
+  <span class="ident">opts</span> <span class="punct">=</span> <span class="punct">{</span><span class="symbol">:some=</span><span class="punct">&gt;'</span><span class="string">default</span><span class="punct">'}.</span><span class="ident">merge</span><span class="punct">(</span><span class="ident">opts</span><span class="punct">)</span>
+  <span class="comment"># ...</span>
+<span class="keyword">end</span>
+</pre>
+<p>
+Ruby has 'syntactic sugar' that allows name-value paired option
+hashes appearing at the end of a method call not need the curly braces.
+</p>
+<pre class='ruby' style='border:4px solid #DDDDDD; width:308px;'><span class="ident">foo</span> <span class="punct">&quot;</span><span class="string">bar</span><span class="punct">&quot;,</span> <span class="symbol">:bob</span> <span class="punct">=&gt;</span> <span class="punct">&quot;</span><span class="string">loblaw's</span><span class="punct">&quot;,</span> <span class="symbol">:law</span> <span class="punct">=&gt;</span> <span class="punct">'</span><span class="string">blog</span><span class="punct">'</span><span class="string"><span class="normal">
+</span></span></pre>
+
+<p>
+So typically when a method takes an "options hash" it appears as the last parameter.
+</p>
+<p style='font-size: 0.8em'><em>For reasons that might become clear,
+  optparse-lite does not utilize this idiom as an isomorphicism.
+</em></p>
+
+<div class='spacer-gif'>&#160;</div>
+<button class="next lower">&#187;</button>
+    </div>
+    <div class="balloon balloon-4 slide-16-only" style='width: 267px'>
+      <p>Actual parameters passed to a method call are <em>positionally semantic</em>, by which i mean that the interpreter
+        figures out which actual parameters correspond to which formal parameters by their order (i.e. index)
+        (a ridiculously obvious point which sounds confusing when you explain it).
+      </p>
+      <p>Although it wouldn't necessarily have to be this way, ruby follows the syntax rule for all other
+        such programming languages and allows you to specify default arguments for parameters IFF they are
+        contiguous and at the end of the list of parameters.</p>
+<pre class='ruby'><span class="keyword">def </span><span class="method">baby</span> <span class="ident">jug</span><span class="punct">,</span> <span class="ident">funny</span><span class="punct">='</span><span class="string">default</span><span class="punct">';</span> <span class="keyword">end</span>
+</pre>
+<pre class='ruby'><span class="ident">baby</span><span class="punct">('</span><span class="string">funny</span><span class="punct">')</span> <span class="comment"># not funny</span>
+</pre>
+      <p>(Imagine a method that takes five arguments where the first, third and last have defaults and are
+        thereby optional. No reason. just for fun.  Some SQL syntax is sorta like this.)</p>
+      <p>The only point in all this is that contiguous trailing parameters of a method
+        who take defaults are effectively optional. </p>
+        <div class='spacer-gif'></div>
         <button class="next">&#187;</button>
     </div>
-    <div class="balloon balloon-4 slide-16-only">
-        <p>An options hash is a <em>kind of</em> method parameter.</p>
-        <p>contiguous trailing parameters of a method who take defaults are effectively optional. </p>
-        <p>
-        Ruby has 'syntactic sugar' that allows name-value paired option
-        hashes appearing at the end of a method call not need the curly braces.
-        So typically, when a method takes an "options hash" it appears as the last parameter.
-        </p>
-        <button class="next">&#187;</button>
-    </div>
+
+
+
     <div class="balloon balloon-5 slide-21-only">
         <p>One <em>kind of</em> trailing option parameter is a splat.</p>
         <p>(in ruby 1.8.7 the splat must be the last parameter.)</p>
@@ -207,49 +252,111 @@ The grammar you define with OptparseLite defines the [set](/high-concept/terms#s
             positional named parameter at the beginning get turned into elements of an
             array that is passed as the effective last parameter of the method call.
         </p>
+<pre class='ruby'><span class="keyword">def </span><span class="method">splat</span><span class="punct">(*</span><span class="ident">blah</span><span class="punct">)</span>
+  <span class="ident">puts</span> <span class="ident">blah</span><span class="punct">.</span><span class="ident">map</span><span class="punct">(&amp;</span><span class="symbol">:upcase</span><span class="punct">).</span><span class="ident">join</span><span class="punct">('</span><span class="string"> </span><span class="punct">')</span>
+<span class="keyword">end</span>
+<span class="ident">splat</span> <span class="punct">'</span><span class="string">baby</span><span class="punct">',</span> <span class="punct">'</span><span class="string">jug</span><span class="punct">',</span> <span class="punct">'</span><span class="string">not</span><span class="punct">',</span> <span class="punct">'</span><span class="string">funny</span><span class="punct">'</span>
+<span class="comment"># BABY JUG NOT FUNNY</span>
+</pre>
+        <div class='spacer-gif'>&#160;</div>
         <button class="next">&#187;</button>
     </div>
     <div class="balloon balloon-6 slide-51-only">
         <p>An application interface is made up of <em>many</em> commands.</p>
+        <p><em>(note API's's are, too)</em></p>
+        <div style='height: 2px'>&#160;</div>
         <button class="next">&#187;</button>
     </div>
     <div class="balloon balloon-7 slide-56-only">
-        <p>A command <em>has many</em> (positional) arguments.</p>
+        <p>A CLI command <em>has many</em> (positional) arguments.</p>
         <p>It could have zero.  Note this isomorphs with parameters of a method.</p>
+<pre class='terminal' style='border:8px solid #DDDDDD; width: 302px'><span class='prompt'>~ &#62;</span> git checkout -h
+usage: git checkout [options] &#60;branch&#62;
+</pre>
+<p>The above git command has one required positional argument.</p>
+        <div class='spacer-gif'></div>
         <button class="next">&#187;</button>
     </div>
     <div class="balloon balloon-8 slide-61-only">
-        <p>A command <em>has one (or zero)</em> options structure.</p>
+        <p>An optparse-lite command (method) gets passed one (or zero) options structure (hash).</p>
+<pre class='ruby'><span class="ident">opts</span> <span class="punct">{</span>
+  <span class="ident">opt</span> <span class="punct">'</span><span class="string">--[no-]mames</span><span class="punct">',</span> <span class="symbol">:juae</span>
+<span class="punct">}</span>
+<span class="keyword">def </span><span class="method">do_it</span> <span class="ident">opts</span><span class="punct">,</span> <span class="ident">a</span><span class="punct">,</span> <span class="ident">b</span><span class="punct">=</span><span class="constant">nil</span>
+  <span class="comment"># do it</span>
+<span class="keyword">end</span>
+</pre>
+<p><b>opts</b> is passed as the first parameter above.</p>
+        <div style='top: 2px'></div>
         <button class="next">&#187;</button>
     </div>
+
+
+
     <div class="balloon balloon-9 slide-66-only">
-        <p>One kind of positional argument <em>is a</em> trailing optional argument</p>
+        <p>One kind of positional argument <em>is a</em> trailing optional argument.</p>
+<pre class='ruby'><span class="keyword">def </span><span class="method">do_it</span> <span class="ident">opts</span><span class="punct">,</span> <span class="ident">foo</span><span class="punct">,</span> <span class="ident">bar</span><span class="punct">=</span><span class="constant">nil</span>
+  <span class="comment"># do it</span>
+<span class="keyword">end</span>
+</pre>
+<p><b>bar</b> is a trailing optional argument above.
+</p>
+        <div style='top: 2px'></div>
         <button class="next">&#187;</button>
     </div>
     <div class="balloon balloon-10 slide-71-only">
         <p>One kind of trailing optional argument <em>is a</em> splat argument.</p>
         <p><em>Note that if you have any splat argument, you can only have one.</em></p>
-        <button class="next">&#187;</button>
+        <div style='text-align: right; float: right' class='slide-71-only'>
+          <button class="next" style='position: relative; bottom: 0px; right: 0px'>&#187;</button>
+        </div>
+        <p>In the below git command, <b>filepattern</b> is a splat argument.</p>
+<pre class='terminal' style='width: 369px; border: 8px solid #DDDDDD;'>~ &#62; git add -h
+usage: git add [options] [--] &#60;filepattern&#62;...
+</pre>
     </div>
     <div class="balloon balloon-11 slide-76-only">
         <p>An options structure (hash) is made up of <em>many</em> options.</p>
         <p><em>(as a hash is made up of many elements)</em></p>
+        <div class='spacer-gif'></div>
         <button class="next">&#187;</button>
     </div>
     <div class="balloon balloon-12 slide-81-only">
         <p>One kind of option <em>is a</em> switch (or <em>'flag'</em>)</p>
         <p>This kind of option does not (and cannot) take an argument.</p>
+<pre class='terminal' style='width: 369px; border:8px solid #DDDDDD; font-size: 9px'>~ &#62; git add -h
+usage: git add [options] [--] &#60;filepattern&#62;...
+...
+    -f, --force           allow adding otherwise ignored files
+...
+</pre>
+<p><b>--force</b> is a flag for the git <b>add</b> command.  It does not take any arguments.</p>
+        <div class='spacer-gif'></div>
         <button class="next">&#187;</button>
     </div>
     <div class="balloon balloon-13 slide-86-only">
         <p>Another <em>kind of</em> option is the kind that takes a required parameter.</p>
-        <button class="next">&#187;</button>
+        <p>The git <b>checkout</b> command takes a <b>--branch</b> option which takes a required parameter.</p>
+        <button class="next" style=''>&#187;</button>
+<pre class='terminal' style='font-size: 9px'>~ &#62; git co -h
+usage: git checkout [options] &#60;branch&#62;
+...
+    -b &#60;new branch&#62;      branch
+...
+</pre>
     </div>
     <div class="balloon balloon-14 slide-91-only">
         <p>Another <em>kind of</em> option is the kind that takes a parameter optionally.</p>
+        <p>The <b>git init</b> command has an option <b>--shared</b> which takes a parameter optionally.</p>
+        <p><b>--template</b> takes a parameter also but note that it is not optional.</p>
+<pre class='terminal' style='border:9px solid #DDDDDD;font-size:9px;left:-165px;position:relative;width:387px;'>~ &#62; git init -h
+usage: git init [-q | --quiet] [--bare] [--template=&#60;template-directory&#62;]
+  [--shared[=&#60;permissions&#62;]] [directory]
+</pre>
         <p><em>(These are not the same as options that have default parameters -- an option
             that has a default value is not necessarily valid appearing on its own
             without a parameter.)</em></p>
+        <div class='spacer-gif'></div>
         <button class="next">&#187;</button>
     </div>
 
@@ -277,24 +384,24 @@ The grammar you define with OptparseLite defines the [set](/high-concept/terms#s
     <div class="step step-15">15</div>
   </div>
   <div class="slide-control slide-control-bottom-left">
-    <div class="back-bar back-bar-lvl-1">&#160;</div>
-    <div class="back-bar back-bar-lvl-2">&#160;</div>
-    <div class="step step-1">1</div>
-    <div class="step step-2">2</div>
-    <div class="step step-3">3</div>
-    <div class="step step-4">4</div>
-    <div class="step step-5">5</div>
-    <div class="step step-6">6</div>
-    <div class="step step-7">7</div>
-    <br/>
-    <div class="step step-8">8</div>
-    <div class="step step-9">9</div>
-    <div class="step step-10">10</div>
-    <div class="step step-11">11</div>
-    <div class="step step-12">12</div>
-    <div class="step step-13">13</div>
-    <div class="step step-14">14</div>
-    <div class="step step-15">15</div>
+    <div class='fix'>
+      <div class="back-bar back-bar-wide">&#160;</div>
+      <div class="step step-1">1</div>
+      <div class="step step-2">2</div>
+      <div class="step step-3">3</div>
+      <div class="step step-4">4</div>
+      <div class="step step-5">5</div>
+      <div class="step step-6">6</div>
+      <div class="step step-7">7</div>
+      <div class="step step-8">8</div>
+      <div class="step step-9">9</div>
+      <div class="step step-10">10</div>
+      <div class="step step-11">11</div>
+      <div class="step step-12">12</div>
+      <div class="step step-13">13</div>
+      <div class="step step-14">14</div>
+      <div class="step step-15">15</div>
+    </div>
   </div>
 
   <div class="big-button-overlay">
