@@ -570,6 +570,33 @@
 			this.distY = this.posNow.top - this.posHome.top;
 		}
 	});
+	var ParsedUrl = function(param){
+		this.param = param;
+		this.init();
+	};
+	ParsedUrl.prototype = {
+		init: function(){
+			var md, re = new RegExp('^(.+)(?:#'+this.param+')-([0-9]+)');
+			if (md = re.exec(window.location)) {
+				this.head = md[1];
+				this.currentStep = parseInt(md[2]);
+			} else {
+				this.head = window.location;
+				this.currentStep = null;
+			}
+		},
+		getCurrentStep: function(){
+			return this.currentStep;
+		},
+		setCurrentStep: function(step){
+			if ('number'!=typeof(step)) return commonFailure("not a step: "+step);
+			this.currentStep = step;
+		},
+		unparse: function(){
+			var together = this.head + '#' + this.param + '-' + this.currentStep;
+			return together;
+		}
+	};
 	var SlideManager = function(elems){
 		this.elems = elems;
 		this.slideManagerInit();
@@ -603,13 +630,21 @@
 			this.slideControlStyles[name] = stuffs;
 			return null;
 		},
+		setSlideUrlParameterName: function(name){
+			this.slideUrlParameterName = name;
+			// ugly here
+			var s, p = this.getParsedUrl();
+			if (null !== (s = p.getCurrentStep())) {
+				this.playWasClicked(s);
+			}
+		},
 		slideManagerInit: function(){
 			this.playButtonOverlay = this.elems.find('.big-button-overlay');
 			mylog("PBO"); PBO = this.playButtonOverlay;
 			this.frame = this.playButtonOverlay.find('.frame');
 			var self = this;
 			this.frame.click(function(e){
-				self.playWasClicked(e);
+				self.playWasClicked(1);
 			});
 		},
 		// ############### private #######################
@@ -622,7 +657,19 @@
 			var nextStepNumber = stepNumberOfThisSlide + 1;
 			this.goToStep(nextStepNumber);
 		},
+		changeUrlForStep: function(step){
+			if (!this.slideUrlParameterName) return;
+			var p = this.getParsedUrl();
+			if (p.getCurrentStep() != step) {
+				p.setCurrentStep(step);
+				var url = p.unparse();
+				window.location = url;
+			}
+		},
 		fail: commonFailure,
+		getParsedUrl: function(){
+			return new ParsedUrl(this.slideUrlParameterName);
+		},
 		// ignoring semi-opaque crap for now
 		goToStep: function(step){
 			if ('number' != typeof(step)) return this.fail("not a number: "+step);
@@ -664,18 +711,19 @@
 				}
 			}
 			// hide all visible elements who have
+			this.changeUrlForStep(step);
 			this.runTransition();
 			return null;
 		},
 		mapIsSetup: false,
 		mylog: mylog,
-		playWasClicked: function(e){
+		playWasClicked: function(goToStep){
 			var pbo = this.playButtonOverlay;
 			var self = this;
 			tardNuggetFadeTo(pbo,
 				444, 0.0, function(){
 					pbo.css('display','none');
-					self.goToStep(1);
+					self.goToStep(goToStep);
 				}
 			);
 		},
