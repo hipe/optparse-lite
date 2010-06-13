@@ -48,6 +48,7 @@ jQuery(document).ready(function(){
 	});
 	slideMgr.setSlideControls(jQuery('#fig-2 .slide-control'), 'default');
 	slideMgr.setBalloonNextButtons(jQuery('#fig-2 .balloon .next'));
+	slideMgr.setSlideUrlParameterName('slide');
 
 	// ############## the below chunk is just for animating the big button ####
 	var frame = jQuery('#fig-2 .big-button-overlay .frame');
