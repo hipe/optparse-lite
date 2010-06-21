@@ -5,30 +5,21 @@ require 'nandoc/extras/rcov-task'
 
 task :default => :test
 
-# require 'jeweler'
+require 'jeweler'
 
-# require 'nandoc/parse-readme'
-#
-# Jeweler::Tasks.new do |s|
-#   s.authors = ['Chip Malice']
-#   # s.description = NanDoc::ParseReadme.description('README')
-#   s.email = 'chip.malice@gmail.com'
-#   s.executables = []
-#   s.files =  FileList['[A-Z]*', '{bin,doc,generators,lib,test}/**/*']
-#   s.homepage = "http://optparse-lite.rubyforge.org"
-#   s.files = %w(
-#     lib/optparse-lite.rb
-#     test/test.rb
-#     ) + Dir['*.txt']
-#   s.homepage = 'http://optparse-lite.hipeland.org'
-#   s.name = 'optparse-lite'
-#   s.rubyforge_project = 'optparse-lite'
-#   # s.summary = NanDoc::ParseReadme.summary('README')
-#   s.summary = "half the size, half the features of trollop/trollip"
-#
-#   # deps
-#   s.add_dependency 'json', '~> 1.2.3'
-# end
+require 'nandoc/parse-readme'
+
+Jeweler::Tasks.new do |s|
+  s.authors = ['Chip Malice']
+  s.description = NanDoc::ParseReadme.description('README')
+  s.email = 'chip.malice@gmail.com'
+  s.executables = []
+  s.files =  FileList['[A-Z]*', '{bin,doc,generators,lib,test}/**/*']
+  s.homepage = 'http://optparse-lite.hipeland.org'
+  s.name = 'optparse-lite'
+  s.rubyforge_project = 'optparse-lite'
+  s.summary = NanDoc::ParseReadme.summary('README')
+end
 
 Rake::TestTask.new do |t|
   t.verbose = true
